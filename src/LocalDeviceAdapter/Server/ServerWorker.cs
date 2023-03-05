@@ -1,7 +1,7 @@
-﻿using System;
+﻿using LocalDeviceAdapter.Handlers.Echo;
+using System;
 using System.ComponentModel;
 using System.Net;
-using LocalDeviceAdapter.Handlers.Echo;
 using WebSocketSharp.Server;
 
 namespace LocalDeviceAdapter.Server

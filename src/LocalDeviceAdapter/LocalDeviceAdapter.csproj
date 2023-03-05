@@ -28,4 +28,8 @@
 		<None Include="3dparty\websocket-sharp.txt" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
+	</ItemGroup>
+
 </Project>
