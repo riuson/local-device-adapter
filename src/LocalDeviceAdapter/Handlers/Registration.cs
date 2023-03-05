@@ -7,7 +7,7 @@ namespace LocalDeviceAdapter.Handlers
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<EchoInitializer>()
+            builder.RegisterType<Initializer>()
                 .As<IHandlerInitializer>();
         }
     }

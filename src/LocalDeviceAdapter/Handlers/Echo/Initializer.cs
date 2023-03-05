@@ -2,11 +2,11 @@
 
 namespace LocalDeviceAdapter.Handlers.Echo
 {
-    internal class EchoInitializer : IHandlerInitializer
+    internal class Initializer : IHandlerInitializer
     {
         public void Initialize(WebSocketServer server)
         {
-            server.AddWebSocketService<EchoHandler>("/Echo");
+            server.AddWebSocketService<Handler>("/Echo");
         }
 
         public void DeInitialize(WebSocketServer server)
