@@ -84,7 +84,10 @@ namespace LocalDeviceAdapter.Handlers.Uart
                         var deviceInfo = new DeviceInfo
                         {
                             Name = GetDeviceName(classDevs, DeviceInterfaceData),
-                            Description = GetDevicePropertyString(classDevs, DeviceInterfaceData, SDRP.SDRP_DEVICEDESC)
+                            Description = GetDevicePropertyString(classDevs, DeviceInterfaceData, SDRP.SDRP_DEVICEDESC),
+                            HardwareId = GetDevicePropertyString(classDevs, DeviceInterfaceData, SDRP.SDRP_HARDWAREID),
+                            FriendlyName =
+                                GetDevicePropertyString(classDevs, DeviceInterfaceData, SDRP.SDRP_FRIENDLYNAME)
                         };
                         allComPorts.Add(deviceInfo);
                         ++MemberIndex;
@@ -241,6 +244,8 @@ namespace LocalDeviceAdapter.Handlers.Uart
         {
             public string Name;
             public string Description;
+            public string HardwareId;
+            public string FriendlyName;
         }
     }
 }
