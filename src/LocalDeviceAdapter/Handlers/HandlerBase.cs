@@ -5,11 +5,11 @@ using WebSocketSharp.Server;
 
 namespace LocalDeviceAdapter.Handlers
 {
-    internal class HandlerBase : WebSocketBehavior
+    internal abstract class HandlerBase : WebSocketBehavior
     {
         protected override void OnMessage(MessageEventArgs e)
         {
-            var returnedAnswer = "Invalid command.";
+            var response = string.Empty;
 
             if (e.IsText)
                 try
@@ -21,25 +21,60 @@ namespace LocalDeviceAdapter.Handlers
                         var result = ProcessCommand(command);
 
                         if (result.success)
-                            returnedAnswer = JsonSerializer.Serialize(
-                                result.answer,
-                                new JsonSerializerOptions
-                                {
-                                    AllowTrailingCommas = false
-                                });
+                        {
+                            SendAnswer(result.answer);
+                            return;
+                        }
                     }
                 }
                 catch (Exception exception)
                 {
-                    returnedAnswer = "A problem encountered while processing command.";
+#if DEBUG
+                    SendError(
+                        "A problem encountered while processing command.",
+                        exception);
+                    return;
+#endif
                 }
 
-            Send(returnedAnswer);
+            SendError("Invalid command.");
         }
 
-        protected virtual (bool success, object answer) ProcessCommand(RemoteCommand command)
+        protected abstract (bool success, object answer) ProcessCommand(RemoteCommand command);
+
+        private string Serialize(object value)
         {
-            return (false, new object());
+            return JsonSerializer.Serialize(
+                value,
+                new JsonSerializerOptions
+                {
+                    AllowTrailingCommas = false
+                });
+        }
+
+        private void SendAnswer(object value)
+        {
+            Send(Serialize(value));
+        }
+
+        private void SendError(string message, Exception exception = null)
+        {
+            if (exception is null)
+                Send(
+                    Serialize(
+                        new
+                        {
+                            error = message
+                        }));
+            else
+                Send(
+                    Serialize(
+                        new
+                        {
+                            error = message,
+                            message = exception.Message,
+                            stackTrace = exception.StackTrace
+                        }));
         }
     }
 }
