@@ -1,5 +1,6 @@
 using System;
-using System.Windows.Forms;
+using System.Threading;
+using LocalDeviceAdapter.Server;
 
 namespace LocalDeviceAdapter
 {
@@ -11,9 +12,16 @@ namespace LocalDeviceAdapter
         [STAThread]
         private static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            // Application.EnableVisualStyles();
+            // Application.SetCompatibleTextRenderingDefault(false);
+            // Application.Run(new Form1());
+
+            var worker = new ServerWorker();
+            worker.RunWorkerAsync();
+
+            Thread.Sleep(10000);
+
+            worker.Dispose();
         }
     }
 }
