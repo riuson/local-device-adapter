@@ -1,8 +1,8 @@
-﻿using LocalDeviceAdapter.Handlers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using LocalDeviceAdapter.Handlers;
 using WebSocketSharp.Server;
 
 namespace LocalDeviceAdapter.Server

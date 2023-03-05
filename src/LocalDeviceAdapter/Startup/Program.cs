@@ -1,5 +1,5 @@
-using Autofac;
 using System.Reflection;
+using Autofac;
 
 namespace LocalDeviceAdapter
 {

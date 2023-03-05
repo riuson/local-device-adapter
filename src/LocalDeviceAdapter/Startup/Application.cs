@@ -1,5 +1,5 @@
-using LocalDeviceAdapter.Server;
 using System.Threading;
+using LocalDeviceAdapter.Server;
 
 namespace LocalDeviceAdapter
 {
