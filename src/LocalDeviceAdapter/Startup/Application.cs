@@ -16,7 +16,7 @@ namespace LocalDeviceAdapter
         {
             _server.Start();
 
-            Thread.Sleep(20000);
+            Thread.Sleep(30000);
 
             _server.Shutdown();
         }
