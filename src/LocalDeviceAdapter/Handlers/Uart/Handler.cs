@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -12,17 +13,32 @@ namespace LocalDeviceAdapter.Handlers.Uart
         protected override void OnMessage(MessageEventArgs e)
         {
             if (e.IsText)
-                switch (e.Data)
+                try
                 {
-                    case "list":
+                    var command = JsonSerializer.Deserialize<RemoteCommand>(e.Data);
+                    if (command is null)
                     {
-                        var json = GetSerialPorts();
-                        Send(json);
+                        Send("Invalid command");
                         return;
                     }
+
+                    switch (command.cmd)
+                    {
+                        case "list":
+                        {
+                            var json = GetSerialPorts();
+                            Send(json);
+                            return;
+                        }
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Send("Invalid command");
+                    return;
                 }
 
-            Send("none");
+            Send("Invalid command");
         }
 
         private static string GetSerialPorts()
@@ -46,10 +62,11 @@ namespace LocalDeviceAdapter.Handlers.Uart
             var ports = Win32SerialPortEnum.GetAllCOMPorts()
                 .Select(x => new
                 {
-                    x.Name, x.Description,
-                    x.FriendlyName,
-                    VendorId = getId(regexVid, x.HardwareId),
-                    ProductId = getId(regexPid, x.HardwareId)
+                    name = x.Name,
+                    description = x.Description,
+                    friendlyName = x.FriendlyName,
+                    vendorId = getId(regexVid, x.HardwareId),
+                    productId = getId(regexPid, x.HardwareId)
                 })
                 .ToArray();
             var json = JsonSerializer.Serialize(
