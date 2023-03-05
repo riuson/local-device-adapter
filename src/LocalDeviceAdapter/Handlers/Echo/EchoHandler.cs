@@ -7,7 +7,7 @@ namespace LocalDeviceAdapter.Handlers.Echo
     {
         protected override void OnMessage(MessageEventArgs e)
         {
-            Send(e.Data);
+            Send("Rsponse: " + e.Data);
         }
     }
 }
