@@ -9,12 +9,23 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <None Update="3dparty\websocket-sharp.dll">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="3dparty\websocket-sharp.txt">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
+		<Reference Include="websocket-sharp">
+			<HintPath>3dparty\websocket-sharp.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="3dparty\websocket-sharp.dll">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ContentWithTargetPath Include="3dparty\websocket-sharp.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<TargetPath>websocket-sharp.txt</TargetPath>
+		</ContentWithTargetPath>
+		<None Include="3dparty\websocket-sharp.txt" />
 	</ItemGroup>
 
 </Project>
