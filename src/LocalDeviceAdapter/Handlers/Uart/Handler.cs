@@ -1,47 +1,27 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Linq;
-using System.Text.Json;
 using System.Text.RegularExpressions;
-using WebSocketSharp;
-using WebSocketSharp.Server;
 
 namespace LocalDeviceAdapter.Handlers.Uart
 {
-    internal class Handler : WebSocketBehavior
+    internal class Handler : HandlerBase
     {
-        protected override void OnMessage(MessageEventArgs e)
+        protected override (bool success, object answer) ProcessCommand(RemoteCommand command)
         {
-            if (e.IsText)
-                try
+            switch (command.cmd)
+            {
+                case "list":
                 {
-                    var command = JsonSerializer.Deserialize<RemoteCommand>(e.Data);
-                    if (command is null)
-                    {
-                        Send("Invalid command");
-                        return;
-                    }
+                    var ports = GetSerialPorts();
 
-                    switch (command.cmd)
-                    {
-                        case "list":
-                        {
-                            var json = GetSerialPorts();
-                            Send(json);
-                            return;
-                        }
-                    }
+                    return (true, ports);
                 }
-                catch (Exception exception)
-                {
-                    Send("Invalid command");
-                    return;
-                }
-
-            Send("Invalid command");
+                default:
+                    return (false, new object());
+            }
         }
 
-        private static string GetSerialPorts()
+        private static object GetSerialPorts()
         {
             // SDRP_HARDWAREID: USB\VID_10C4&PID_EA60&REV_0100USB\VID_10C4&PID_EA60
             var regexVid = new Regex(@"(?<=VID_)[0-9a-fA-F]{4}");
@@ -69,13 +49,7 @@ namespace LocalDeviceAdapter.Handlers.Uart
                     productId = getId(regexPid, x.HardwareId)
                 })
                 .ToArray();
-            var json = JsonSerializer.Serialize(
-                ports,
-                new JsonSerializerOptions
-                {
-                    AllowTrailingCommas = false
-                });
-            return json;
+            return ports;
         }
     }
 }
