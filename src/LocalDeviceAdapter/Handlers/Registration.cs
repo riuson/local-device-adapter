@@ -1,5 +1,6 @@
-﻿using Autofac;
-using LocalDeviceAdapter.Handlers.Echo;
+﻿using System.Reflection;
+using Autofac;
+using Module = Autofac.Module;
 
 namespace LocalDeviceAdapter.Handlers
 {
@@ -7,8 +8,9 @@ namespace LocalDeviceAdapter.Handlers
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<Initializer>()
-                .As<IHandlerInitializer>();
+            builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
+                .Where(x => x.IsAssignableTo<IHandlerInitializer>() && !x.IsInterface)
+                .AsImplementedInterfaces();
         }
     }
 }
