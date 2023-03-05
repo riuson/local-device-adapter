@@ -8,4 +8,13 @@
 		<ImplicitUsings>disable</ImplicitUsings>
 	</PropertyGroup>
 
+	<ItemGroup>
+	  <None Update="3dparty\websocket-sharp.dll">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="3dparty\websocket-sharp.txt">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
 </Project>
