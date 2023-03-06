@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Ninja.WebSockets;
 
 namespace LocalDeviceAdapter.Server
 {
@@ -6,10 +7,16 @@ namespace LocalDeviceAdapter.Server
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<Server>()
+            builder.RegisterType<ServerLauncher>()
                 .AsImplementedInterfaces();
             builder.RegisterType<ServerOptions>()
                 .AsImplementedInterfaces();
+            builder.RegisterType<WebServer>()
+                .AsImplementedInterfaces()
+                .AsSelf();
+            builder.RegisterType<WebSocketServerFactory>()
+                .AsImplementedInterfaces()
+                .AsSelf();
         }
     }
 }

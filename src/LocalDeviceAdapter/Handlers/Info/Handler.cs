@@ -1,8 +1,8 @@
 ﻿namespace LocalDeviceAdapter.Handlers.Info
 {
-    internal class Handler : HandlerBase
+    internal class Handler : IHandler
     {
-        protected override (bool success, object answer) ProcessCommand(RemoteCommand command)
+        public (bool success, object answer) Process(RemoteCommand command)
         {
             switch (command.cmd)
             {
