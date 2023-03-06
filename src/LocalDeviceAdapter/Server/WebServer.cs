@@ -1,7 +1,4 @@
-﻿using LocalDeviceAdapter.Handlers;
-using Microsoft.Extensions.Logging;
-using Ninja.WebSockets;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,6 +10,9 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using LocalDeviceAdapter.Handlers;
+using Microsoft.Extensions.Logging;
+using Ninja.WebSockets;
 
 namespace LocalDeviceAdapter.Server
 {

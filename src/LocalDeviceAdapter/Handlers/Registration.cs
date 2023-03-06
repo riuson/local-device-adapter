@@ -1,5 +1,5 @@
-﻿using Autofac;
-using System.Reflection;
+﻿using System.Reflection;
+using Autofac;
 using Module = Autofac.Module;
 
 namespace LocalDeviceAdapter.Handlers

@@ -7,7 +7,7 @@ namespace LocalDeviceAdapter.Server
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<Server>()
+            builder.RegisterType<ServerLauncher>()
                 .AsImplementedInterfaces();
             builder.RegisterType<ServerOptions>()
                 .AsImplementedInterfaces();

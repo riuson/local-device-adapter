@@ -1,24 +1,20 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Threading.Tasks;
-
-//using WebSocketSharp.Server;
+using Microsoft.Extensions.Logging;
 
 namespace LocalDeviceAdapter.Server
 {
-    internal class Server : IServer
+    internal class ServerLauncher : IServer
     {
         private readonly Func<WebServer> _createWebServer;
-        private readonly ILogger<Server> _logger;
+        private readonly ILogger<ServerLauncher> _logger;
         private readonly IServerOptions _options;
         private WebServer _server;
         private Task _serverTask;
 
-        //private WebSocketServer _server;
-
-        public Server(
+        public ServerLauncher(
             IServerOptions options,
-            ILogger<Server> logger,
+            ILogger<ServerLauncher> logger,
             Func<WebServer> createWebServer)
         {
             _options = options;
