@@ -20,12 +20,12 @@ namespace LocalDeviceAdapter
         public void Run()
         {
             _server.Start();
-            _logger.Log(LogLevel.Debug, "App started");
+            _logger.LogInformation("App started");
 
             Thread.Sleep(30000);
 
             _server.Shutdown();
-            _logger.Log(LogLevel.Debug, "App stopped");
+            _logger.LogInformation("App stopped");
         }
     }
 }

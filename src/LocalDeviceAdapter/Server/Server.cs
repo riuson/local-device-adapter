@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using LocalDeviceAdapter.Handlers;
+using Microsoft.Extensions.Logging;
+using Ninja.WebSockets;
 
 //using WebSocketSharp.Server;
 
@@ -10,8 +13,10 @@ namespace LocalDeviceAdapter.Server
     internal class Server : IServer
     {
         private readonly IEnumerable<IHandlerInitializer> _handlerInitializers;
-
+        private readonly ILogger<Server> _logger;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly IServerOptions _options;
+        private WebServer _server;
 
         //private WebSocketServer _server;
         private Task _serverTask;
@@ -19,49 +24,39 @@ namespace LocalDeviceAdapter.Server
 
         public Server(
             IServerOptions options,
-            IEnumerable<IHandlerInitializer> handlerInitializers)
+            IEnumerable<IHandlerInitializer> handlerInitializers,
+            ILogger<Server> logger,
+            ILoggerFactory loggerFactory)
         {
             _options = options;
             _handlerInitializers = handlerInitializers;
+            _logger = logger;
+            _loggerFactory = loggerFactory;
         }
 
         public void Start()
         {
             _tokenSource = new CancellationTokenSource();
-            _serverTask = new Task(
-                () => Process(_tokenSource.Token),
-                _tokenSource.Token,
-                TaskCreationOptions.LongRunning);
-            _serverTask.Start();
+            var webSocketServerFactory = new WebSocketServerFactory();
+            var supportedSubProtocols = new[] { "chatV1", "chatV2", "chatV3" };
+            try
+            {
+                {
+                    _server = new WebServer(webSocketServerFactory, _loggerFactory, supportedSubProtocols);
+                    _server.Listen(4649);
+                    _logger.LogInformation($"Listening in port {4649}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+            }
         }
 
         public void Shutdown()
         {
             _tokenSource.Cancel();
-            _serverTask.Wait();
-        }
-
-        private void Process(CancellationToken token)
-        {
-            //_server = new WebSocketServer(_options.IP, _options.LowerPort, false);
-
-            //foreach (var handlerInitializer in _handlerInitializers) handlerInitializer.Initialize(_server);
-
-            //_server.Start();
-
-            //if (_server.IsListening)
-            //{
-            //    Console.WriteLine("Listening on port {0}, and providing WebSocket services:", _server.Port);
-
-            //    foreach (var path in _server.WebSocketServices.Paths)
-            //        Console.WriteLine("- {0}", path);
-            //}
-
-            //while (!token.IsCancellationRequested) token.WaitHandle.WaitOne(TimeSpan.FromMinutes(1));
-
-            //_server.Stop();
-
-            //foreach (var handlerInitializer in _handlerInitializers) handlerInitializer.DeInitialize(_server);
+            _server.Dispose();
         }
     }
 }
