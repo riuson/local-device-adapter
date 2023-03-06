@@ -1,10 +1,9 @@
-﻿//using WebSocketSharp.Server;
-
-namespace LocalDeviceAdapter.Handlers
+﻿namespace LocalDeviceAdapter.Handlers
 {
     public interface IHandlerInitializer
     {
-        //void Initialize(WebSocketServer server);
-        //void DeInitialize(WebSocketServer server);
+        string Path { get; }
+
+        IHandler CreateHandler();
     }
 }

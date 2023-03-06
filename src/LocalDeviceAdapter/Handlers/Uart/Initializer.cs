@@ -1,17 +1,12 @@
-﻿//using WebSocketSharp.Server;
-
-namespace LocalDeviceAdapter.Handlers.Uart
+﻿namespace LocalDeviceAdapter.Handlers.Uart
 {
     internal class Initializer : IHandlerInitializer
     {
-        //public void Initialize(WebSocketServer server)
-        //{
-        //    server.AddWebSocketService<Handler>("/Uart");
-        //}
+        public string Path => "/Uart";
 
-        //public void DeInitialize(WebSocketServer server)
-        //{
-        //    server.RemoveWebSocketService("/Uart");
-        //}
+        public IHandler CreateHandler()
+        {
+            return new Handler();
+        }
     }
 }

@@ -1,11 +1,15 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using LocalDeviceAdapter.Handlers;
+using Microsoft.Extensions.Logging;
 using Ninja.WebSockets;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,6 +20,7 @@ namespace LocalDeviceAdapter.Server
     {
         // const int BUFFER_SIZE = 1 * 1024 * 1024 * 1024; // 1GB
         private const int BUFFER_SIZE = 4 * 1024 * 1024; // 4MB
+        private readonly Dictionary<string, IHandlerInitializer> _handlerInitializers;
         private readonly ILogger<WebServer> _logger;
         private readonly IWebSocketServerFactory _webSocketServerFactory;
         private bool _isDisposed;
@@ -23,10 +28,13 @@ namespace LocalDeviceAdapter.Server
 
         public WebServer(
             ILogger<WebServer> logger,
-            IWebSocketServerFactory webSocketServerFactory)
+            IWebSocketServerFactory webSocketServerFactory,
+            IEnumerable<IHandlerInitializer> handlerInitializers)
         {
             _logger = logger;
             _webSocketServerFactory = webSocketServerFactory;
+            _handlerInitializers = handlerInitializers
+                .ToDictionary(x => x.Path);
         }
 
         public void Dispose()
@@ -96,24 +104,36 @@ namespace LocalDeviceAdapter.Server
                     var path = GetPath(header);
                     var origin = GetOrigin(header);
 
-                    var options = new WebSocketServerOptions
+                    if (_handlerInitializers.ContainsKey(path))
                     {
-                        KeepAliveInterval = TimeSpan.FromSeconds(30)
-                    };
-                    _logger.LogInformation(
-                        "Http header has requested an upgrade to Web Socket protocol. Negotiating Web Socket handshake");
+                        var options = new WebSocketServerOptions
+                        {
+                            KeepAliveInterval = TimeSpan.FromSeconds(30)
+                        };
+                        _logger.LogInformation(
+                            "Http header has requested an upgrade to Web Socket protocol. Negotiating Web Socket handshake.");
 
-                    var webSocket = await _webSocketServerFactory.AcceptWebSocketAsync(context, options);
+                        var webSocket = await _webSocketServerFactory.AcceptWebSocketAsync(context, options);
 
-                    _logger.LogInformation("Web Socket handshake response sent. Stream ready.");
-                    await RespondToWebSocketRequestAsync(webSocket, source.Token, path, origin);
+                        _logger.LogInformation("Web Socket handshake response sent. Stream ready.");
+                        await RespondToWebSocketRequestAsync(
+                            webSocket,
+                            source.Token,
+                            path,
+                            origin,
+                            _handlerInitializers[path]);
+                    }
+                    else
+                    {
+                        _logger.LogInformation("No handlers are expecting for this path. Ignoring.");
+                    }
                 }
                 else
                 {
-                    _logger.LogInformation("Http header contains no web socket upgrade request. Ignoring");
+                    _logger.LogInformation("Http header contains no web socket upgrade request. Ignoring.");
                 }
 
-                _logger.LogInformation("Server: Connection closed");
+                _logger.LogInformation("Server: Connection closed.");
             }
             catch (ObjectDisposedException)
             {
@@ -142,9 +162,11 @@ namespace LocalDeviceAdapter.Server
             WebSocket webSocket,
             CancellationToken token,
             string path,
-            string origin)
+            string origin,
+            IHandlerInitializer handlerInitializer)
         {
             var buffer = new ArraySegment<byte>(new byte[BUFFER_SIZE]);
+            var handler = handlerInitializer.CreateHandler();
 
             while (true)
             {
@@ -164,11 +186,44 @@ namespace LocalDeviceAdapter.Server
                     break;
                 }
 
-                // just echo the message back to the client
-                var toSend = new ArraySegment<byte>(buffer.Array, buffer.Offset, result.Count);
-                //await webSocket.SendAsync(toSend, WebSocketMessageType.Binary, true, token);
-                var segment = new ArraySegment<byte>(Encoding.ASCII.GetBytes(path));
-                await webSocket.SendAsync(segment, WebSocketMessageType.Text, true, token);
+                var answerObject = HandleRequest(
+                    handler,
+                    new ArraySegment<byte>(buffer.Array, buffer.Offset, result.Count));
+                var answerJson = JsonSerializer.Serialize(answerObject);
+                var answerArray = new ArraySegment<byte>(Encoding.ASCII.GetBytes(answerJson));
+                await webSocket.SendAsync(
+                    answerArray,
+                    WebSocketMessageType.Text,
+                    true,
+                    token);
+            }
+        }
+
+        private static object HandleRequest(IHandler handler, ArraySegment<byte> requestArray)
+        {
+            try
+            {
+                var requestJson = ArrayToString(requestArray);
+                var request = JsonSerializer.Deserialize<RemoteCommand>(requestJson);
+                var answer = handler.Process(request);
+
+                if (answer.success) return answer.answer;
+
+                return new
+                {
+                    error = "Unknown command."
+                };
+            }
+            catch (Exception e)
+            {
+                return new
+                {
+                    error = "An exception was occur while processing request.",
+#if DEBUG
+                    message = e.Message,
+                    stack = e.StackTrace,
+#endif
+                };
             }
         }
 
@@ -192,6 +247,11 @@ namespace LocalDeviceAdapter.Server
             if (!match.Success) return string.Empty;
 
             return match.Value;
+        }
+
+        private static string ArrayToString(ArraySegment<byte> array)
+        {
+            return Encoding.ASCII.GetString(array.ToArray());
         }
     }
 }
