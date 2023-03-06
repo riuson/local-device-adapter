@@ -1,6 +1,6 @@
-using System.Threading;
 using LocalDeviceAdapter.Server;
 using Microsoft.Extensions.Logging;
+using System.Threading;
 
 namespace LocalDeviceAdapter
 {

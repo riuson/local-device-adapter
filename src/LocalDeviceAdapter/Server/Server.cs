@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using LocalDeviceAdapter.Handlers;
+﻿using LocalDeviceAdapter.Handlers;
 using Microsoft.Extensions.Logging;
-using Ninja.WebSockets;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 //using WebSocketSharp.Server;
 
@@ -12,40 +10,34 @@ namespace LocalDeviceAdapter.Server
 {
     internal class Server : IServer
     {
+        private readonly Func<WebServer> _createWebServer;
         private readonly IEnumerable<IHandlerInitializer> _handlerInitializers;
         private readonly ILogger<Server> _logger;
-        private readonly ILoggerFactory _loggerFactory;
         private readonly IServerOptions _options;
         private WebServer _server;
+        private Task _serverTask;
 
         //private WebSocketServer _server;
-        private Task _serverTask;
-        private CancellationTokenSource _tokenSource;
 
         public Server(
             IServerOptions options,
             IEnumerable<IHandlerInitializer> handlerInitializers,
             ILogger<Server> logger,
-            ILoggerFactory loggerFactory)
+            Func<WebServer> createWebServer)
         {
             _options = options;
             _handlerInitializers = handlerInitializers;
             _logger = logger;
-            _loggerFactory = loggerFactory;
+            _createWebServer = createWebServer;
         }
 
         public void Start()
         {
-            _tokenSource = new CancellationTokenSource();
-            var webSocketServerFactory = new WebSocketServerFactory();
-            var supportedSubProtocols = new[] { "chatV1", "chatV2", "chatV3" };
             try
             {
-                {
-                    _server = new WebServer(webSocketServerFactory, _loggerFactory, supportedSubProtocols);
-                    _server.Listen(4649);
-                    _logger.LogInformation($"Listening in port {4649}");
-                }
+                _server = _createWebServer();
+                _serverTask = _server.Listen(_options.IP, _options.LowerPort);
+                _logger.LogInformation($"Listening in port {4649}");
             }
             catch (Exception ex)
             {
@@ -55,8 +47,19 @@ namespace LocalDeviceAdapter.Server
 
         public void Shutdown()
         {
-            _tokenSource.Cancel();
-            _server.Dispose();
+            try
+            {
+                _server.Dispose();
+                _serverTask.Wait();
+            }
+            catch (AggregateException)
+            {
+                // do nothing. This will be thrown if the Listener has been stopped
+            }
+            catch (ObjectDisposedException)
+            {
+                // do nothing. This will be thrown if the Listener has been stopped
+            }
         }
     }
 }
