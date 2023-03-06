@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -91,6 +92,10 @@ namespace LocalDeviceAdapter.Server
                 var context = await _webSocketServerFactory.ReadHttpHeaderFromStreamAsync(stream);
                 if (context.IsWebSocketRequest)
                 {
+                    var header = context.HttpHeader;
+                    var path = GetPath(header);
+                    var origin = GetOrigin(header);
+
                     var options = new WebSocketServerOptions
                     {
                         KeepAliveInterval = TimeSpan.FromSeconds(30)
@@ -101,7 +106,7 @@ namespace LocalDeviceAdapter.Server
                     var webSocket = await _webSocketServerFactory.AcceptWebSocketAsync(context, options);
 
                     _logger.LogInformation("Web Socket handshake response sent. Stream ready.");
-                    await RespondToWebSocketRequestAsync(webSocket, source.Token);
+                    await RespondToWebSocketRequestAsync(webSocket, source.Token, path, origin);
                 }
                 else
                 {
@@ -133,7 +138,11 @@ namespace LocalDeviceAdapter.Server
             }
         }
 
-        public async Task RespondToWebSocketRequestAsync(WebSocket webSocket, CancellationToken token)
+        public async Task RespondToWebSocketRequestAsync(
+            WebSocket webSocket,
+            CancellationToken token,
+            string path,
+            string origin)
         {
             var buffer = new ArraySegment<byte>(new byte[BUFFER_SIZE]);
 
@@ -158,9 +167,31 @@ namespace LocalDeviceAdapter.Server
                 // just echo the message back to the client
                 var toSend = new ArraySegment<byte>(buffer.Array, buffer.Offset, result.Count);
                 //await webSocket.SendAsync(toSend, WebSocketMessageType.Binary, true, token);
-                var segment = new ArraySegment<byte>(Encoding.ASCII.GetBytes("Hello!"));
+                var segment = new ArraySegment<byte>(Encoding.ASCII.GetBytes(path));
                 await webSocket.SendAsync(segment, WebSocketMessageType.Text, true, token);
             }
+        }
+
+        private static string GetPath(string httpHeader)
+        {
+            //GET /Echo HTTP/1.1
+            var regex = new Regex(@"(?<=^GET\s+)\S+?(?=\s+HTTP)", RegexOptions.IgnoreCase);
+            var match = regex.Match(httpHeader);
+
+            if (!match.Success) return string.Empty;
+
+            return match.Value;
+        }
+
+        private static string GetOrigin(string httpHeader)
+        {
+            //Origin: https://www.example.com
+            var regex = new Regex(@"(?<=Origin:\s+)\S+", RegexOptions.IgnoreCase);
+            var match = regex.Match(httpHeader);
+
+            if (!match.Success) return string.Empty;
+
+            return match.Value;
         }
     }
 }
