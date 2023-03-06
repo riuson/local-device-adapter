@@ -1,17 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using LocalDeviceAdapter.Handlers;
-using WebSocketSharp.Server;
+
+//using WebSocketSharp.Server;
 
 namespace LocalDeviceAdapter.Server
 {
     internal class Server : IServer
     {
         private readonly IEnumerable<IHandlerInitializer> _handlerInitializers;
+
         private readonly IServerOptions _options;
-        private WebSocketServer _server;
+
+        //private WebSocketServer _server;
         private Task _serverTask;
         private CancellationTokenSource _tokenSource;
 
@@ -41,25 +43,25 @@ namespace LocalDeviceAdapter.Server
 
         private void Process(CancellationToken token)
         {
-            _server = new WebSocketServer(_options.IP, _options.LowerPort, false);
+            //_server = new WebSocketServer(_options.IP, _options.LowerPort, false);
 
-            foreach (var handlerInitializer in _handlerInitializers) handlerInitializer.Initialize(_server);
+            //foreach (var handlerInitializer in _handlerInitializers) handlerInitializer.Initialize(_server);
 
-            _server.Start();
+            //_server.Start();
 
-            if (_server.IsListening)
-            {
-                Console.WriteLine("Listening on port {0}, and providing WebSocket services:", _server.Port);
+            //if (_server.IsListening)
+            //{
+            //    Console.WriteLine("Listening on port {0}, and providing WebSocket services:", _server.Port);
 
-                foreach (var path in _server.WebSocketServices.Paths)
-                    Console.WriteLine("- {0}", path);
-            }
+            //    foreach (var path in _server.WebSocketServices.Paths)
+            //        Console.WriteLine("- {0}", path);
+            //}
 
-            while (!token.IsCancellationRequested) token.WaitHandle.WaitOne(TimeSpan.FromMinutes(1));
+            //while (!token.IsCancellationRequested) token.WaitHandle.WaitOne(TimeSpan.FromMinutes(1));
 
-            _server.Stop();
+            //_server.Stop();
 
-            foreach (var handlerInitializer in _handlerInitializers) handlerInitializer.DeInitialize(_server);
+            //foreach (var handlerInitializer in _handlerInitializers) handlerInitializer.DeInitialize(_server);
         }
     }
 }

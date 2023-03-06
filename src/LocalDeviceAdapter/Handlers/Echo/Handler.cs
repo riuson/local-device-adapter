@@ -1,13 +1,13 @@
-﻿using WebSocketSharp;
-using WebSocketSharp.Server;
+﻿//using WebSocketSharp;
+//using WebSocketSharp.Server;
 
 namespace LocalDeviceAdapter.Handlers.Echo
 {
-    internal class Handler : WebSocketBehavior
+    internal class Handler // : WebSocketBehavior
     {
-        protected override void OnMessage(MessageEventArgs e)
-        {
-            Send(e.Data);
-        }
+        //protected override void OnMessage(MessageEventArgs e)
+        //{
+        //    Send(e.Data);
+        //}
     }
 }

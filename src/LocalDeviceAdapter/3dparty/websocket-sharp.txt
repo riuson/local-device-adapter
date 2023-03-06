@@ -1,5 +1,0 @@
-﻿Source:     https://github.com/sta/websocket-sharp
-License:    MIT
-Recompiled: .Net 4.7.2, Release, AnyCPU
-Revision:   de64a5e68dc72df6f4cec632181cd012ef2ea036
-            Mon Feb 6 22:41:48 2023 +0900

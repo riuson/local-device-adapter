@@ -9,26 +9,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Reference Include="websocket-sharp">
-			<HintPath>3dparty\websocket-sharp.dll</HintPath>
-		</Reference>
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Update="3dparty\websocket-sharp.dll">
-			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
-
-	<ItemGroup>
-		<ContentWithTargetPath Include="3dparty\websocket-sharp.txt">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<TargetPath>websocket-sharp.txt</TargetPath>
-		</ContentWithTargetPath>
-		<None Include="3dparty\websocket-sharp.txt" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
 		<PackageReference Include="GitVersion.MsBuild" Version="5.12.0">
 			<PrivateAssets>all</PrivateAssets>
