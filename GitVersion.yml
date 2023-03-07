@@ -1,0 +1,5 @@
+branches: {}
+ignore:
+  sha: []
+merge-message-formats: {}
+commit-date-format: yyyy-MM-dd HH:mm:ss zzzz
