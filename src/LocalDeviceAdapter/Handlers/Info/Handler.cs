@@ -34,5 +34,9 @@ namespace LocalDeviceAdapter.Handlers.Info
                     return (false, new object());
             }
         }
+
+        public void Dispose()
+        {
+        }
     }
 }

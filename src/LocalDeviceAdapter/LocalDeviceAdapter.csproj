@@ -20,6 +20,7 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0-preview.1.23110.8" />
 		<PackageReference Include="Microsoft.Win32.Registry" Version="6.0.0-preview.5.21301.5" />
 		<PackageReference Include="Ninja.WebSockets" Version="1.1.8" />
+		<PackageReference Include="System.IO.Ports" Version="7.0.0" />
 		<PackageReference Include="System.Text.Json" Version="8.0.0-preview.1.23110.8" />
 	</ItemGroup>
 

@@ -166,36 +166,38 @@ namespace LocalDeviceAdapter.Server
             IHandlerInitializer handlerInitializer)
         {
             var buffer = new ArraySegment<byte>(new byte[BUFFER_SIZE]);
-            var handler = handlerInitializer.CreateHandler();
-
-            while (true)
+            
+            using (var handler = handlerInitializer.CreateHandler())
             {
-                var result = await webSocket.ReceiveAsync(buffer, token);
-                if (result.MessageType == WebSocketMessageType.Close)
+                while (true)
                 {
-                    _logger.LogInformation(
-                        $"Client initiated close. Status: {result.CloseStatus} Description: {result.CloseStatusDescription}");
-                    break;
-                }
+                    var result = await webSocket.ReceiveAsync(buffer, token);
+                    if (result.MessageType == WebSocketMessageType.Close)
+                    {
+                        _logger.LogInformation(
+                            $"Client initiated close. Status: {result.CloseStatus} Description: {result.CloseStatusDescription}");
+                        break;
+                    }
 
-                if (result.Count > BUFFER_SIZE)
-                {
-                    await webSocket.CloseAsync(WebSocketCloseStatus.MessageTooBig,
-                        $"Web socket frame cannot exceed buffer size of {BUFFER_SIZE:#,##0} bytes. Send multiple frames instead.",
+                    if (result.Count > BUFFER_SIZE)
+                    {
+                        await webSocket.CloseAsync(WebSocketCloseStatus.MessageTooBig,
+                            $"Web socket frame cannot exceed buffer size of {BUFFER_SIZE:#,##0} bytes. Send multiple frames instead.",
+                            token);
+                        break;
+                    }
+
+                    var answerObject = HandleRequest(
+                        handler,
+                        new ArraySegment<byte>(buffer.Array, buffer.Offset, result.Count));
+                    var answerJson = JsonSerializer.Serialize(answerObject);
+                    var answerArray = new ArraySegment<byte>(Encoding.ASCII.GetBytes(answerJson));
+                    await webSocket.SendAsync(
+                        answerArray,
+                        WebSocketMessageType.Text,
+                        true,
                         token);
-                    break;
                 }
-
-                var answerObject = HandleRequest(
-                    handler,
-                    new ArraySegment<byte>(buffer.Array, buffer.Offset, result.Count));
-                var answerJson = JsonSerializer.Serialize(answerObject);
-                var answerArray = new ArraySegment<byte>(Encoding.ASCII.GetBytes(answerJson));
-                await webSocket.SendAsync(
-                    answerArray,
-                    WebSocketMessageType.Text,
-                    true,
-                    token);
             }
         }
 

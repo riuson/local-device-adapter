@@ -1,6 +1,8 @@
-﻿namespace LocalDeviceAdapter.Handlers
+﻿using System;
+
+namespace LocalDeviceAdapter.Handlers
 {
-    public interface IHandler
+    public interface IHandler : IDisposable
     {
         (bool success, object answer) Process(RemoteCommand command);
     }
