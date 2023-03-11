@@ -166,7 +166,7 @@ namespace LocalDeviceAdapter.Server
             IHandlerInitializer handlerInitializer)
         {
             var buffer = new ArraySegment<byte>(new byte[BUFFER_SIZE]);
-            
+
             using (var handler = handlerInitializer.CreateHandler())
             {
                 while (true)
@@ -213,7 +213,8 @@ namespace LocalDeviceAdapter.Server
 
                 return new
                 {
-                    error = "Unknown command."
+                    error = "Command failed.",
+                    details = answer.answer
                 };
             }
             catch (Exception e)

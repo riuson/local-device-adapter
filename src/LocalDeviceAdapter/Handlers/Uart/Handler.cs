@@ -14,40 +14,38 @@ namespace LocalDeviceAdapter.Handlers.Uart
 
         public void Dispose()
         {
-            foreach (var kvp in this._ports)
-            {
+            foreach (var kvp in _ports)
                 if (kvp.Value.IsOpen)
                 {
                     kvp.Value.Close();
                     kvp.Value.Dispose();
                 }
-            }
         }
 
         public virtual (bool success, object answer) Process(RemoteCommand command)
         {
-            switch (command.cmd)
+            switch (command.Cmd)
             {
                 case "list":
-                    {
-                        var ports = GetSerialPorts();
-                        return (true, ports);
-                    }
+                {
+                    var ports = GetSerialPorts();
+                    return (true, ports);
+                }
                 case "open":
-                    {
-                        var (isOpened, message) = HandlePortOpen(command.args);
-                        return (isOpened, message);
-                    }
+                {
+                    var (isOpened, message) = HandlePortOpen(command.Args);
+                    return (isOpened, message);
+                }
                 case "close":
-                    {
-                        var (isClosed, message) = HandlePortClose(command.args);
-                        return (isClosed, message);
-                    }
+                {
+                    var (isClosed, message) = HandlePortClose(command.Args);
+                    return (isClosed, message);
+                }
                 case "exchange":
-                    {
-                        var (isSuccess, message) = HandlePortExchange(command.args);
-                        return (isSuccess, message);
-                    }
+                {
+                    var (isSuccess, message) = HandlePortExchange(command.Args);
+                    return (isSuccess, message);
+                }
                 default:
                     return (false, new object());
             }
@@ -108,6 +106,10 @@ namespace LocalDeviceAdapter.Handlers.Uart
                     message.AppendLine($"Port {name} was not found.");
                 }
             }
+            else
+            {
+                message.AppendLine("Port name is not specified.");
+            }
 
             var baudRate = 0;
             var isBaudRateValid = false;
@@ -123,7 +125,8 @@ namespace LocalDeviceAdapter.Handlers.Uart
                     }
                     else
                     {
-                        message.AppendLine($"Baudrate should be in range [1200, 3000000], but {baudRate} is specified.");
+                        message.AppendLine(
+                            $"Baudrate should be in range [1200, 3000000], but {baudRate} is specified.");
                     }
                 }
                 else
@@ -131,87 +134,90 @@ namespace LocalDeviceAdapter.Handlers.Uart
                     message.AppendLine($"Can't parse baudrate value '{strValue}'.");
                 }
             }
+            else
+            {
+                message.AppendLine("Baudrate is not specified.");
+            }
 
             var parity = Parity.None;
             var isParityValid = false;
 
             if (arguments.TryGetValue("parity", out strValue))
-            {
                 switch (strValue)
                 {
                     case "none":
-                        {
-                            isParityValid = true;
-                            break;
-                        }
+                    {
+                        isParityValid = true;
+                        break;
+                    }
                     case "even":
-                        {
-                            parity = Parity.Even;
-                            isParityValid = true;
-                            break;
-                        }
+                    {
+                        parity = Parity.Even;
+                        isParityValid = true;
+                        break;
+                    }
                     case "odd":
-                        {
-                            parity = Parity.Odd;
-                            isParityValid = true;
-                            break;
-                        }
+                    {
+                        parity = Parity.Odd;
+                        isParityValid = true;
+                        break;
+                    }
                     default:
-                        {
-                            message.AppendLine($"Unexpected parity value '{strValue}'.");
-                            break;
-                        }
+                    {
+                        message.AppendLine($"Unexpected parity value '{strValue}'.");
+                        break;
+                    }
                 }
-            }
+            else
+                message.AppendLine("Parity name is not specified.");
 
             var stopBits = StopBits.None;
             var isStopBitsValid = false;
 
             if (arguments.TryGetValue("stopbits", out strValue))
-            {
                 switch (strValue)
                 {
                     case "none":
                     case "0":
-                        {
-                            isStopBitsValid = true;
-                            break;
-                        }
+                    {
+                        isStopBitsValid = true;
+                        break;
+                    }
                     case "1":
                     case "one":
-                        {
-                            stopBits = StopBits.One;
-                            isStopBitsValid = true;
-                            break;
-                        }
+                    {
+                        stopBits = StopBits.One;
+                        isStopBitsValid = true;
+                        break;
+                    }
                     case "1.5":
-                        {
-                            stopBits = StopBits.OnePointFive;
-                            isStopBitsValid = true;
-                            break;
-                        }
+                    {
+                        stopBits = StopBits.OnePointFive;
+                        isStopBitsValid = true;
+                        break;
+                    }
                     case "2":
                     case "two":
-                        {
-                            stopBits = StopBits.Two;
-                            isStopBitsValid = true;
-                            break;
-                        }
+                    {
+                        stopBits = StopBits.Two;
+                        isStopBitsValid = true;
+                        break;
+                    }
                     default:
-                        {
-                            message.AppendLine($"Unexpected stopbits value '{strValue}'.");
-                            break;
-                        }
+                    {
+                        message.AppendLine($"Unexpected stopbits value '{strValue}'.");
+                        break;
+                    }
                 }
-            }
+            else
+                message.AppendLine("Stopbits name is not specified.");
 
             if (isNameValid && isBaudRateValid && isParityValid && isStopBitsValid)
-            {
                 try
                 {
-                    if (this._ports.TryGetValue(name, out var openedPort))
+                    if (_ports.TryGetValue(name, out var openedPort))
                     {
-                        this._ports.Remove(name);
+                        _ports.Remove(name);
                         openedPort.Close();
                         openedPort.Dispose();
                     }
@@ -226,7 +232,7 @@ namespace LocalDeviceAdapter.Handlers.Uart
                     if (port.IsOpen)
                     {
                         port.ReadTimeout = 1000;
-                        this._ports.Add(name, port);
+                        _ports.Add(name, port);
                         return (port.IsOpen, $"Port {name} is open.");
                     }
 
@@ -236,7 +242,8 @@ namespace LocalDeviceAdapter.Handlers.Uart
                 {
                     return (false, exc.Message);
                 }
-            }
+
+            message.AppendLine("Some port's settings are invalid.");
 
             return (false, message.ToString());
         }
@@ -246,21 +253,21 @@ namespace LocalDeviceAdapter.Handlers.Uart
             string strValue;
             var message = new StringBuilder();
 
-            var name = string.Empty;
-
             if (arguments.TryGetValue("name", out strValue))
             {
-                if (this._ports.TryGetValue(strValue, out var port))
+                if (_ports.TryGetValue(strValue, out var port))
                 {
                     port.Close();
-                    this._ports.Remove(strValue);
+                    _ports.Remove(strValue);
                     port.Dispose();
-                    return (true, $"Port {name} is closed.");
+                    return (true, $"Port {strValue} is closed.");
                 }
-                else
-                {
-                    message.AppendLine($"Port {name} was not found.");
-                }
+
+                message.AppendLine($"Port {strValue} was not found.");
+            }
+            else
+            {
+                message.AppendLine("Port name is not specified.");
             }
 
             return (false, message.ToString());
@@ -280,7 +287,7 @@ namespace LocalDeviceAdapter.Handlers.Uart
                     .Select(x => x.Name)
                     .ToArray();
 
-                if (ports.Contains(strValue) && this._ports.ContainsKey(strValue))
+                if (ports.Contains(strValue) && _ports.ContainsKey(strValue))
                 {
                     name = strValue;
                     isNameValid = true;
@@ -290,6 +297,10 @@ namespace LocalDeviceAdapter.Handlers.Uart
                     message.AppendLine($"Port {name} was not found.");
                 }
             }
+            else
+            {
+                message.AppendLine("Port name is not specified.");
+            }
 
             var sendArray = new byte[] { };
             var isSendArrayValid = false;
@@ -297,15 +308,11 @@ namespace LocalDeviceAdapter.Handlers.Uart
             if (arguments.TryGetValue("sendHexString", out strValue))
             {
                 if (strValue.Length == 0)
-                {
                     message.AppendLine("Can't send zero-length data.");
-                }
                 else if ((strValue.Length & 1) != 0)
-                {
-                    message.AppendLine("Invalid length of data. It was expected that the length of the string would be a multiple of two.");
-                }
+                    message.AppendLine(
+                        "Invalid length of data. It was expected that the length of the string would be a multiple of two.");
                 else
-                {
                     try
                     {
                         sendArray = Enumerable.Range(0, strValue.Length)
@@ -318,14 +325,16 @@ namespace LocalDeviceAdapter.Handlers.Uart
                     {
                         message.AppendLine(e.Message);
                     }
-                }
+            }
+            else
+            {
+                message.AppendLine("Data 'sendHexString' for sending is is not specified.");
             }
 
             if (isNameValid && isSendArrayValid)
-            {
                 try
                 {
-                    if (this._ports.TryGetValue(name, out var port))
+                    if (_ports.TryGetValue(name, out var port))
                     {
                         if (!port.IsOpen)
                         {
@@ -334,7 +343,7 @@ namespace LocalDeviceAdapter.Handlers.Uart
                         else
                         {
                             port.Write(sendArray, 0, sendArray.Length);
-                            var receivedArray = this.Receive(port);
+                            var receivedArray = Receive(port);
                             return (true, string.Join("", receivedArray.Select(x => x.ToString("X2"))));
                         }
                     }
@@ -343,7 +352,6 @@ namespace LocalDeviceAdapter.Handlers.Uart
                 {
                     return (false, exc.Message);
                 }
-            }
 
             return (false, message.ToString());
         }
@@ -366,13 +374,9 @@ namespace LocalDeviceAdapter.Handlers.Uart
                 }
 
                 if (readed > 0)
-                {
                     result.AddRange(buffer.Take(readed));
-                }
                 else
-                {
                     break;
-                }
             }
 
             return result.ToArray();
