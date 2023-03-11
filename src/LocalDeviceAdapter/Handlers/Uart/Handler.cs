@@ -245,7 +245,7 @@ namespace LocalDeviceAdapter.Handlers.Uart
 
             message.AppendLine("Some port's settings are invalid.");
 
-            return (false, message.ToString());
+            return (false, message.ToString().Trim());
         }
 
         private (bool success, string message) HandlePortClose(Dictionary<string, string> arguments)
@@ -270,7 +270,7 @@ namespace LocalDeviceAdapter.Handlers.Uart
                 message.AppendLine("Port name is not specified.");
             }
 
-            return (false, message.ToString());
+            return (false, message.ToString().Trim());
         }
 
         private (bool success, string message) HandlePortExchange(Dictionary<string, string> arguments)
@@ -353,7 +353,7 @@ namespace LocalDeviceAdapter.Handlers.Uart
                     return (false, exc.Message);
                 }
 
-            return (false, message.ToString());
+            return (false, message.ToString().Trim());
         }
 
         private byte[] Receive(SerialPort port)

@@ -209,19 +209,18 @@ namespace LocalDeviceAdapter.Server
                 var request = JsonSerializer.Deserialize<RemoteCommand>(requestJson);
                 var answer = handler.Process(request);
 
-                if (answer.success) return answer.answer;
-
                 return new
                 {
-                    error = "Command failed.",
-                    details = answer.answer
+                    status = answer.success ? "success" : "failed",
+                    data = answer.answer
                 };
             }
             catch (Exception e)
             {
                 return new
                 {
-                    error = "An exception was occur while processing request.",
+                    status = "failed",
+                    error = "An unhandled exception was occur while processing request.",
 #if DEBUG
                     message = e.Message,
                     stack = e.StackTrace,
