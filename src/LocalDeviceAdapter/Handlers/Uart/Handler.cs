@@ -336,6 +336,30 @@ namespace LocalDeviceAdapter.Handlers.Uart
                 message.AppendLine("Data 'sendHexString' for sending is is not specified.");
             }
 
+            var timeout = 0;
+            var isTimeoutValid = false;
+
+            if (arguments.TryGetValue("timeout", out strValue))
+            {
+                if (int.TryParse(strValue, out var value))
+                {
+                    if (value >= 0 && value <= 10_000)
+                    {
+                        timeout = value;
+                        isTimeoutValid = true;
+                    }
+                    else
+                    {
+                        message.AppendLine(
+                            $"Timeout should be in range [0, 10000], but {timeout} is specified.");
+                    }
+                }
+                else
+                {
+                    message.AppendLine($"Can't parse timeout value '{strValue}'.");
+                }
+            }
+
             if (isNameValid && isSendArrayValid)
                 try
                 {
@@ -347,6 +371,8 @@ namespace LocalDeviceAdapter.Handlers.Uart
                         }
                         else
                         {
+                            if (isTimeoutValid) port.ReadTimeout = timeout;
+
                             port.Write(sendArray, 0, sendArray.Length);
                             var receivedArray = Receive(port);
                             return (true, string.Join("", receivedArray.Select(x => x.ToString("X2"))));
