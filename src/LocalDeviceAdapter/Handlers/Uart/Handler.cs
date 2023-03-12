@@ -46,6 +46,11 @@ namespace LocalDeviceAdapter.Handlers.Uart
                     var (isSuccess, message) = HandlePortExchange(command.Args);
                     return (isSuccess, message);
                 }
+                case "testExchange":
+                {
+                    var (isSuccess, message) = HandlePortTestExchange(command.Args);
+                    return (isSuccess, message);
+                }
                 default:
                     return (false, new object());
             }
@@ -352,6 +357,73 @@ namespace LocalDeviceAdapter.Handlers.Uart
                 {
                     return (false, exc.Message);
                 }
+
+            return (false, message.ToString().Trim());
+        }
+
+        private (bool success, string message) HandlePortTestExchange(Dictionary<string, string> arguments)
+        {
+            string strValue;
+            var message = new StringBuilder();
+
+            var name = string.Empty;
+            var isNameValid = false;
+
+            if (arguments.TryGetValue("name", out strValue))
+            {
+                var ports = Win32SerialPortEnum.GetAllCOMPorts()
+                    .Select(x => x.Name)
+                    .ToArray();
+
+                if (ports.Contains(strValue))
+                {
+                    name = strValue;
+                    isNameValid = true;
+                }
+                else
+                {
+                    message.AppendLine($"Port {name} was not found.");
+                }
+            }
+            else
+            {
+                message.AppendLine("Port name is not specified.");
+            }
+
+            var sendArray = new byte[] { };
+            var isSendArrayValid = false;
+
+            if (arguments.TryGetValue("sendHexString", out strValue))
+            {
+                if (strValue.Length == 0)
+                    message.AppendLine("Can't send zero-length data.");
+                else if ((strValue.Length & 1) != 0)
+                    message.AppendLine(
+                        "Invalid length of data. It was expected that the length of the string would be a multiple of two.");
+                else
+                    try
+                    {
+                        sendArray = Enumerable.Range(0, strValue.Length)
+                            .Where(x => x % 2 == 0)
+                            .Select(x => Convert.ToByte(strValue.Substring(x, 2), 16))
+                            .ToArray();
+                        isSendArrayValid = true;
+                    }
+                    catch (Exception e)
+                    {
+                        message.AppendLine(e.Message);
+                    }
+            }
+            else
+            {
+                message.AppendLine("Data 'sendHexString' for sending is is not specified.");
+            }
+
+            if (isNameValid && isSendArrayValid)
+            {
+                var receivedArray = sendArray.Reverse();
+                return (true, string.Join("", receivedArray.Select(x => x.ToString("X2"))));
+            }
 
             return (false, message.ToString().Trim());
         }
