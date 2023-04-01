@@ -13,7 +13,7 @@ namespace LocalDeviceAdapter.Handlers.Info
 
         public (bool success, object answer) Process(RemoteCommand command)
         {
-            switch (command.cmd)
+            switch (command.Cmd)
             {
                 case "info":
                 {
@@ -33,6 +33,10 @@ namespace LocalDeviceAdapter.Handlers.Info
                 default:
                     return (false, new object());
             }
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

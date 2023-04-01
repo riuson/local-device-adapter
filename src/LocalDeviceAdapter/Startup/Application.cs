@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using LocalDeviceAdapter.Server;
 using Microsoft.Extensions.Logging;

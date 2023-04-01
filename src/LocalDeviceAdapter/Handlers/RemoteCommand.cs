@@ -1,10 +1,16 @@
 ﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace LocalDeviceAdapter.Handlers
 {
     public class RemoteCommand
     {
-        public string cmd { get; set; }
-        public Dictionary<string, string> args { get; } = new Dictionary<string, string>();
+        [JsonInclude]
+        [JsonPropertyName("cmd")]
+        public string Cmd { get; set; }
+
+        [JsonInclude]
+        [JsonPropertyName("args")]
+        public Dictionary<string, string> Args { get; set; } = new Dictionary<string, string>();
     }
 }
