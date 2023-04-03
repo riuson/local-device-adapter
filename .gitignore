@@ -399,3 +399,5 @@ FodyWeavers.xsd
 
 *.bak
 *.back
+published/
+install/output/

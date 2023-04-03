@@ -1,0 +1,23 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "omnisharp.enableRoslynAnalyzers": true,
+    "omnisharp.organizeImportsOnFormat": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[csharp]": {
+      "editor.maxTokenizationLineLength": 2500,
+      "editor.defaultFormatter": "ms-dotnettools.csharp"
+    },
+    "files.associations": {
+      "*.csproj": "xml"
+    },
+    "[xml]": {
+      "editor.defaultFormatter": "DotJoshJohnson.xml"
+    },
+    "editor.formatOnSave": false
+  }
+}

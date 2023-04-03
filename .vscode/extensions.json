@@ -1,0 +1,14 @@
+{
+  "recommendations": [
+    "doggy8088.netcore-editorconfiggenerator",
+    "fudge.auto-using",
+    "ms-dotnettools.csharp",
+    "eamodio.gitlens",
+    "jmrog.vscode-nuget-package-manager",
+    "esbenp.prettier-vscode",
+    "spmeesseman.vscode-taskexplorer",
+    "vscode-icons-team.vscode-icons",
+    "dotjoshjohnson.xml",
+    "chouzz.vscode-innosetup"
+  ]
+}

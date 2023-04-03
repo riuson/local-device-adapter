@@ -1,0 +1,139 @@
+name: .NET Desktop
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+\.[0-9]+\.[0-9]+'
+jobs:
+  # Build the application
+  build:
+    strategy:
+      matrix:
+        dotnet: [ 'net472', 'net5.0-windows', 'net6.0-windows', 'net7.0-windows' ]
+        # dotnet: [ 'net7.0-windows' ]
+
+    runs-on: [ self-hosted, Windows ]
+
+    env:
+      Solution_Name: LocalDeviceAdapter.sln                   # Replace with your solution name, i.e. MyWpfApp.sln.
+      InnoSetupCompiler: c:\Program Files (x86)\Inno Setup 6\iscc.exe
+      InstallerFileName: LocalDeviceAdapterInstaller_${{ matrix.dotnet }}
+      PublishDirectory: ${{ github.workspace }}\publish
+      # Test_Project_Path: your-test-project-path                 # Replace with the path to your test project, i.e. MyWpfApp.Tests\MyWpfApp.Tests.csproj.
+
+    steps:
+
+    # Checkout sources
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    # Restore the application to populate the obj folder with RuntimeIdentifiers
+    - name: Restore the application
+      run: dotnet restore $env:Solution_Name -p:TargetFramework=${{ matrix.dotnet }}
+      working-directory: src
+
+    # Publish the application
+    - name: Publish the application
+      working-directory: src
+      run: dotnet publish $env:Solution_Name --no-restore -c Release -f ${{ matrix.dotnet }} -property:PublishDir=${{ env.PublishDirectory }}
+
+    # Compile with Inno Installer
+    - name: Create Installer
+      shell: cmd
+      run: |
+        "${{ env.InnoSetupCompiler }}" "install\master.iss" /DRootDir=${{ github.workspace }} /DInstallerFileName=${{ env.InstallerFileName }} /DOutputDir=${{ github.workspace }}\install\output /DMainFile=${{ env.PublishDirectory }}\LocalDeviceAdapter.exe /DOtherFiles=${{ env.PublishDirectory }}
+
+    # Upload artifacts
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        path: ${{ github.workspace }}\install\output\${{ env.InstallerFileName }}.exe
+        name: ${{ env.InstallerFileName }}.exe
+
+  # Create GitHub Release
+  release:
+    needs: [ build ]
+    name: Create GitHub Release
+    runs-on: [ self-hosted, Linux ]
+    outputs:
+      release_id: ${{ steps.create_release.outputs.id }}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+    # Checklout sources
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    # Create Version Tag
+    - name: Create Version Tag
+      id: create_tag
+      run: |
+        tag=$(basename "${{ github.ref }}")
+        echo "tag=$tag" >> $GITHUB_OUTPUT
+    # Create Release
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.create_tag.outputs.tag }}
+        release_name: ${{ steps.create_tag.outputs.tag }}
+        draft: true
+        prerelease: false
+
+  upload:
+    name: Upload to Release
+    needs: [ release, build ]
+    runs-on: [ self-hosted, Linux ]
+
+    strategy:
+      matrix:
+        dotnet: [ 'net472', 'net5.0-windows', 'net6.0-windows', 'net7.0-windows' ]
+        # dotnet: [ 'net7.0-windows' ]
+
+    env:
+      Solution_Name: LocalDeviceAdapter.sln                   # Replace with your solution name, i.e. MyWpfApp.sln.
+      InstallerFileName: LocalDeviceAdapterInstaller_${{ matrix.dotnet }}
+      ArtifactsDirectory: ${{ github.workspace }}/artifacts
+
+    steps:
+
+    # Download Artifacts.
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{ env.InstallerFileName }}.exe
+        path: ${{ env.ArtifactsDirectory }}
+
+    # Upload to Release
+    - name: Upload Release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.release.outputs.upload_url }}
+        asset_path: ${{ env.ArtifactsDirectory }}/${{ env.InstallerFileName }}.exe
+        asset_name: ${{ env.InstallerFileName }}.exe
+        asset_content_type: application/vnd.microsoft.portable-executable
+
+  publish:
+    name: Publish Github Release
+    needs: [ upload, release ]
+    runs-on: [ self-hosted, Linux ]
+    steps:
+
+    # Publish Release
+    - uses: eregon/publish-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        release_id: ${{ needs.release.outputs.release_id }}
+    # Limit releases
+    - uses: eregon/keep-last-n-releases@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        n: 3
+        remove_tags_without_release: true
