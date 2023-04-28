@@ -2,8 +2,6 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName             "LocalDeviceAdapter"
-#define MyAppVersion          GetVersionNumbersString(MainFile)
-#define MyAppDetailedVersion  GetStringFileInfo(MainFile, "ProductVersion")
 
 #define MyAppPublisher  "riuson@gmail.com"
 #define MyAppURL        "https://github.com/riuson/local-device-adapter"

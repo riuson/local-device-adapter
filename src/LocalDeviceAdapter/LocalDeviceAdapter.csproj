@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<TargetFrameworks>net472;net5.0-windows;net6.0-windows;net7.0-windows</TargetFrameworks>
+		<RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
 		<Nullable>disable</Nullable>
 		<DisableWinExeOutputInference>true</DisableWinExeOutputInference>
 		<ImplicitUsings>disable</ImplicitUsings>

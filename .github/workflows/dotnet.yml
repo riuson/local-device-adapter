@@ -9,16 +9,15 @@ jobs:
   build:
     strategy:
       matrix:
-        dotnet: [ 'net472', 'net5.0-windows', 'net6.0-windows', 'net7.0-windows' ]
-        # dotnet: [ 'net7.0-windows' ]
+        dotnet: [ 'net472', 'net6.0-windows' ]
 
-    runs-on: [ self-hosted, Windows ]
+    runs-on: [ self-hosted, Linux ]
 
     env:
       Solution_Name: LocalDeviceAdapter.sln                   # Replace with your solution name, i.e. MyWpfApp.sln.
-      InnoSetupCompiler: c:\Program Files (x86)\Inno Setup 6\iscc.exe
+      InnoSetupCompiler: /usr/sbin/iscc.sh
       InstallerFileName: LocalDeviceAdapterInstaller_${{ matrix.dotnet }}
-      PublishDirectory: ${{ github.workspace }}\publish
+      PublishDirectory: ${{ github.workspace }}/publish
       # Test_Project_Path: your-test-project-path                 # Replace with the path to your test project, i.e. MyWpfApp.Tests\MyWpfApp.Tests.csproj.
 
     steps:
@@ -31,25 +30,31 @@ jobs:
 
     # Restore the application to populate the obj folder with RuntimeIdentifiers
     - name: Restore the application
-      run: dotnet restore $env:Solution_Name -p:TargetFramework=${{ matrix.dotnet }}
+      run: dotnet restore ${{ env.Solution_Name }} -p:TargetFramework=${{ matrix.dotnet }}
       working-directory: src
 
     # Publish the application
     - name: Publish the application
       working-directory: src
-      run: dotnet publish $env:Solution_Name --no-restore -c Release -f ${{ matrix.dotnet }} -property:PublishDir=${{ env.PublishDirectory }}
+      run: dotnet publish ${{ env.Solution_Name }} --no-restore -c Release -f ${{ matrix.dotnet }} -r win10-x64 --no-self-contained -property:PublishDir=${{ env.PublishDirectory }}
 
     # Compile with Inno Installer
     - name: Create Installer
-      shell: cmd
       run: |
-        "${{ env.InnoSetupCompiler }}" "install\master.iss" /DRootDir=${{ github.workspace }} /DInstallerFileName=${{ env.InstallerFileName }} /DOutputDir=${{ github.workspace }}\install\output /DMainFile=${{ env.PublishDirectory }}\LocalDeviceAdapter.exe /DOtherFiles=${{ env.PublishDirectory }}
+        "${{ env.InnoSetupCompiler }}" \
+        "install\\master.iss" \
+        /DRootDir="Z:\\work" \
+        /DInstallerFileName="${{ env.InstallerFileName }}" \
+        /DMainFile="Z:\\work\\publish\\LocalDeviceAdapter.exe" \
+        /DOtherFiles="Z:\\work\\publish\\" \
+        /DMyAppVersion="${{ env.GitVersion_MajorMinorPatch }}" \
+        /DMyAppDetailedVersion="${{ env.GitVersion_FullSemVer }}.Sha.${{ env.GitVersion_ShortSha }}"
 
     # Upload artifacts
     - name: Upload Artifact
       uses: actions/upload-artifact@v3
       with:
-        path: ${{ github.workspace }}\install\output\${{ env.InstallerFileName }}.exe
+        path: ${{ github.workspace }}/install/Output/${{ env.InstallerFileName }}.exe
         name: ${{ env.InstallerFileName }}.exe
 
   # Create GitHub Release
@@ -91,8 +96,7 @@ jobs:
 
     strategy:
       matrix:
-        dotnet: [ 'net472', 'net5.0-windows', 'net6.0-windows', 'net7.0-windows' ]
-        # dotnet: [ 'net7.0-windows' ]
+        dotnet: [ 'net472', 'net6.0-windows' ]
 
     env:
       Solution_Name: LocalDeviceAdapter.sln                   # Replace with your solution name, i.e. MyWpfApp.sln.
