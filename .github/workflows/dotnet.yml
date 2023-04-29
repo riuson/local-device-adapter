@@ -5,122 +5,130 @@ on:
     tags:
       - 'v[0-9]+\.[0-9]+\.[0-9]+'
 jobs:
-  # Build the application
-  build:
+  build_for_windows:
     name: Build Artifacts
+
     strategy:
       matrix:
-        dotnet: [ 'net472', 'net6.0-windows' ]
+        dotnet: ["net472", "net6.0-windows"]
+        selfcont: [false, true]
+        exclude:
+          - dotnet: net472
+            selfcont: true
 
-    runs-on: [ self-hosted, Linux ]
+    runs-on: [self-hosted, Linux]
 
     env:
-      Solution_Name: LocalDeviceAdapter.sln                   # Replace with your solution name, i.e. MyWpfApp.sln.
+      Solution_Name: LocalDeviceAdapter.sln
       InnoSetupCompiler: /usr/sbin/iscc.sh
-      InstallerFileName: LocalDeviceAdapterInstaller_${{ matrix.dotnet }}
+      InstallerFileName: ${{ format('LocalDeviceAdapterInstaller_{0}_{1}', matrix.selfcont && 'sc' || 'fd',  matrix.dotnet ) }}
       PublishDirectory: ${{ github.workspace }}/publish
-      # Test_Project_Path: your-test-project-path                 # Replace with the path to your test project, i.e. MyWpfApp.Tests\MyWpfApp.Tests.csproj.
+      SelfContainedFlag: ${{ format('{0}', matrix.selfcont && '--self-contained' || '--no-self-contained' ) }}
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-    # Checkout sources
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
+      - name: Restore
+        run: dotnet restore ${{ env.Solution_Name }} -p:TargetFramework=${{ matrix.dotnet }}
+        working-directory: src
 
-    # Restore the application to populate the obj folder with RuntimeIdentifiers
-    - name: Restore the application
-      run: dotnet restore ${{ env.Solution_Name }} -p:TargetFramework=${{ matrix.dotnet }}
-      working-directory: src
+      - name: Publish
+        working-directory: src
+        run: |
+          dotnet publish \
+          ${{ env.Solution_Name }} \
+          --no-restore \
+          -c Release \
+          -f ${{ matrix.dotnet }} \
+          -r win10-x64 \
+          ${{ env.SelfContainedFlag }} \
+          -property:PublishDir=${{ env.PublishDirectory }}
 
-    # Publish the application
-    - name: Publish the application
-      working-directory: src
-      run: dotnet publish ${{ env.Solution_Name }} --no-restore -c Release -f ${{ matrix.dotnet }} -r win10-x64 --no-self-contained -property:PublishDir=${{ env.PublishDirectory }}
+      - name: Create Installer
+        run: |
+          "${{ env.InnoSetupCompiler }}" \
+          "install\\master.iss" \
+          /DRootDir="Z:\\work" \
+          /DInstallerFileName="${{ env.InstallerFileName }}" \
+          /DMainFile="Z:\\work\\publish\\LocalDeviceAdapter.exe" \
+          /DOtherFiles="Z:\\work\\publish\\" \
+          /DMyAppVersion="${{ env.GitVersion_MajorMinorPatch }}" \
+          /DMyAppDetailedVersion="${{ env.GitVersion_FullSemVer }}.Sha.${{ env.GitVersion_ShortSha }}"
 
-    # Compile with Inno Installer
-    - name: Create Installer
-      run: |
-        "${{ env.InnoSetupCompiler }}" \
-        "install\\master.iss" \
-        /DRootDir="Z:\\work" \
-        /DInstallerFileName="${{ env.InstallerFileName }}" \
-        /DMainFile="Z:\\work\\publish\\LocalDeviceAdapter.exe" \
-        /DOtherFiles="Z:\\work\\publish\\" \
-        /DMyAppVersion="${{ env.GitVersion_MajorMinorPatch }}" \
-        /DMyAppDetailedVersion="${{ env.GitVersion_FullSemVer }}.Sha.${{ env.GitVersion_ShortSha }}"
-
-    # Upload artifacts
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        path: ${{ github.workspace }}/install/Output/${{ env.InstallerFileName }}.exe
-        name: ${{ env.InstallerFileName }}.exe
+      # Upload artifacts
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          path: ${{ github.workspace }}/install/Output/${{ env.InstallerFileName }}.exe
+          name: ${{ env.InstallerFileName }}.exe
 
   create_release:
-    name: Create GitHub Release
-    needs: [ build ]
-    runs-on: [ self-hosted, Linux ]
+    name: Create Release
+    needs: [build_for_windows]
+    runs-on: [self-hosted, Linux]
     timeout-minutes: 1
 
     steps:
+      - name: Get Latest Tag
+        id: create_tag
+        run: |
+          tag=$(basename "${{ github.ref }}")
+          echo "tag=$tag" >> $GITHUB_OUTPUT
 
-    - name: Get Latest Tag
-      id: create_tag
-      run: |
-        tag=$(basename "${{ github.ref }}")
-        echo "tag=$tag" >> $GITHUB_OUTPUT
+      - name: Create Release
+        uses: ncipollo/release-action@v1.12.0
+        with:
+          updateOnlyUnreleased: true
+          name: Release ${{ steps.create_tag.outputs.tag }}
+          draft: true
 
-    - name: Create GitHub Release
-      uses: ncipollo/release-action@v1.12.0
-      with:
-        updateOnlyUnreleased: true
-        name: Release ${{ steps.create_tag.outputs.tag }}
-        draft: true
-
-  upload_release:
-    name: Upload Artifacts to GitHub Release
-    needs: [ create_release ]
-    runs-on: [ self-hosted, Linux ]
+  upload_release_for_windows:
+    name: Add Windows Artifacts to Release
+    needs: [create_release]
+    runs-on: [self-hosted, Linux]
     timeout-minutes: 1
 
     strategy:
       matrix:
-        dotnet: [ 'net472', 'net6.0-windows' ]
+        dotnet: ["net472", "net6.0-windows"]
+        selfcont: [false, true]
+        exclude:
+          - dotnet: net472
+            selfcont: true
 
     env:
-      InstallerFileName: LocalDeviceAdapterInstaller_${{ matrix.dotnet }}
+      InstallerFileName: ${{ format('LocalDeviceAdapterInstaller_{0}_{1}', matrix.selfcont && 'sc' || 'fd',  matrix.dotnet ) }}
       ArtifactsDirectory: ${{ github.workspace }}/artifacts
 
     steps:
+      - name: Collect artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.InstallerFileName }}.exe
+          path: ${{ env.ArtifactsDirectory }}
 
-    - name: Collect artifacts
-      uses: actions/download-artifact@v3
-      with:
-        name: ${{ env.InstallerFileName }}.exe
-        path: ${{ env.ArtifactsDirectory }}
-
-    - name: Upload Artifacts
-      uses: ncipollo/release-action@v1.12.0
-      with:
-        artifacts: "${{ env.ArtifactsDirectory }}/*"
-        artifactContentType: application/vnd.microsoft.portable-executable
-        artifactErrorsFailBuild: true
-        allowUpdates: true
-        draft: true
+      - name: Upload Artifact
+        uses: ncipollo/release-action@v1.12.0
+        with:
+          artifacts: "${{ env.ArtifactsDirectory }}/${{ env.InstallerFileName }}.exe"
+          artifactContentType: application/vnd.microsoft.portable-executable
+          artifactErrorsFailBuild: true
+          allowUpdates: true
+          draft: true
 
   publish_release:
-    name: Publish GitHub Release
-    needs: [ upload_release ]
-    runs-on: [ self-hosted, Linux ]
+    name: Publish Release
+    needs: [upload_release_for_windows]
+    runs-on: [self-hosted, Linux]
     timeout-minutes: 1
 
     steps:
-
-    - name: Create GitHub Release
-      uses: ncipollo/release-action@v1.12.0
-      with:
-        allowUpdates: true
-        makeLatest: true
-        draft: false
+      - name: Publish Release
+        uses: ncipollo/release-action@v1.12.0
+        with:
+          allowUpdates: true
+          makeLatest: true
+          draft: false
