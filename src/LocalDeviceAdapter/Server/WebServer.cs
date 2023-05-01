@@ -187,7 +187,7 @@ namespace LocalDeviceAdapter.Server
                         break;
                     }
 
-                    var answerObject = HandleRequest(
+                    var answerObject = this.HandleRequest(
                         handler,
                         new ArraySegment<byte>(buffer.Array, buffer.Offset, result.Count));
                     var answerJson = JsonSerializer.Serialize(answerObject);
@@ -201,7 +201,7 @@ namespace LocalDeviceAdapter.Server
             }
         }
 
-        private static object HandleRequest(IHandler handler, ArraySegment<byte> requestArray)
+        private object HandleRequest(IHandler handler, ArraySegment<byte> requestArray)
         {
             try
             {
@@ -217,6 +217,8 @@ namespace LocalDeviceAdapter.Server
             }
             catch (Exception e)
             {
+                this._logger.LogError(e, "Exception occur while processing request.");
+
                 return new
                 {
                     status = "failed",
