@@ -8,7 +8,7 @@ namespace LocalDeviceAdapter.Handlers.Info
 
         public Handler(ILogger<Handler> logger)
         {
-            _logger = logger;
+            this._logger = logger;
         }
 
         public (bool success, object answer) Process(RemoteCommand command)
@@ -16,20 +16,20 @@ namespace LocalDeviceAdapter.Handlers.Info
             switch (command.Cmd)
             {
                 case "info":
-                {
-                    var info = new
                     {
-                        branchName = GitVersionInformation.BranchName,
-                        sha = GitVersionInformation.Sha,
-                        shortSha = GitVersionInformation.ShortSha,
-                        semVer = GitVersionInformation.SemVer,
-                        commitDate = GitVersionInformation.CommitDate
-                    };
+                        var info = new
+                        {
+                            branchName = GitVersionInformation.BranchName,
+                            sha = GitVersionInformation.Sha,
+                            shortSha = GitVersionInformation.ShortSha,
+                            semVer = GitVersionInformation.SemVer,
+                            commitDate = GitVersionInformation.CommitDate
+                        };
 
-                    _logger.LogDebug("Info");
+                        this._logger.LogDebug("Info");
 
-                    return (true, info);
-                }
+                        return (true, info);
+                    }
                 default:
                     return (false, new object());
             }

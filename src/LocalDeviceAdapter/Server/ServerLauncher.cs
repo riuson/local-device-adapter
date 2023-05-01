@@ -17,22 +17,22 @@ namespace LocalDeviceAdapter.Server
             ILogger<ServerLauncher> logger,
             Func<WebServer> createWebServer)
         {
-            _options = options;
-            _logger = logger;
-            _createWebServer = createWebServer;
+            this._options = options;
+            this._logger = logger;
+            this._createWebServer = createWebServer;
         }
 
         public void Start()
         {
             try
             {
-                _server = _createWebServer();
-                _serverTask = _server.Listen(_options.IP, _options.LowerPort);
-                _logger.LogInformation($"Listening in port {4649}");
+                this._server = this._createWebServer();
+                this._serverTask = this._server.Listen(this._options.IP, this._options.LowerPort);
+                this._logger.LogInformation($"Listening in port {4649}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                this._logger.LogError(ex.Message);
             }
         }
 
@@ -40,8 +40,8 @@ namespace LocalDeviceAdapter.Server
         {
             try
             {
-                _server.Dispose();
-                _serverTask.Wait();
+                this._server.Dispose();
+                this._serverTask.Wait();
             }
             catch (AggregateException)
             {

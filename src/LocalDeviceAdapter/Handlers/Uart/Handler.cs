@@ -21,7 +21,7 @@ namespace LocalDeviceAdapter.Handlers.Uart
 
         public void Dispose()
         {
-            foreach (var kvp in _ports)
+            foreach (var kvp in this._ports)
                 if (kvp.Value.IsOpen)
                 {
                     kvp.Value.Close();
@@ -40,22 +40,22 @@ namespace LocalDeviceAdapter.Handlers.Uart
                     }
                 case "open":
                     {
-                        var (isOpened, message) = HandlePortOpen(command.Args);
+                        var (isOpened, message) = this.HandlePortOpen(command.Args);
                         return (isOpened, message);
                     }
                 case "close":
                     {
-                        var (isClosed, message) = HandlePortClose(command.Args);
+                        var (isClosed, message) = this.HandlePortClose(command.Args);
                         return (isClosed, message);
                     }
                 case "exchange":
                     {
-                        var (isSuccess, message) = HandlePortExchange(command.Args);
+                        var (isSuccess, message) = this.HandlePortExchange(command.Args);
                         return (isSuccess, message);
                     }
                 case "testExchange":
                     {
-                        var (isSuccess, message) = HandlePortTestExchange(command.Args);
+                        var (isSuccess, message) = this.HandlePortTestExchange(command.Args);
                         return (isSuccess, message);
                     }
                 default:
@@ -212,9 +212,9 @@ namespace LocalDeviceAdapter.Handlers.Uart
             if (isNameValid && isBaudRateValid && isParityValid && isStopBitsValid)
                 try
                 {
-                    if (_ports.TryGetValue(name, out var openedPort))
+                    if (this._ports.TryGetValue(name, out var openedPort))
                     {
-                        _ports.Remove(name);
+                        this._ports.Remove(name);
                         openedPort.Close();
                         openedPort.Dispose();
                     }
@@ -229,7 +229,7 @@ namespace LocalDeviceAdapter.Handlers.Uart
                     if (port.IsOpen)
                     {
                         port.ReadTimeout = 1000;
-                        _ports.Add(name, port);
+                        this._ports.Add(name, port);
                         return (port.IsOpen, $"Port {name} is open.");
                     }
 
@@ -252,10 +252,10 @@ namespace LocalDeviceAdapter.Handlers.Uart
 
             if (arguments.TryGetValue("name", out strValue))
             {
-                if (_ports.TryGetValue(strValue, out var port))
+                if (this._ports.TryGetValue(strValue, out var port))
                 {
                     port.Close();
-                    _ports.Remove(strValue);
+                    this._ports.Remove(strValue);
                     port.Dispose();
                     return (true, $"Port {strValue} is closed.");
                 }
@@ -284,7 +284,7 @@ namespace LocalDeviceAdapter.Handlers.Uart
                     .Select(x => x.DeviceName)
                     .ToArray();
 
-                if (ports.Contains(strValue) && _ports.ContainsKey(strValue))
+                if (ports.Contains(strValue) && this._ports.ContainsKey(strValue))
                 {
                     name = strValue;
                     isNameValid = true;
@@ -355,7 +355,7 @@ namespace LocalDeviceAdapter.Handlers.Uart
             if (isNameValid && isSendArrayValid)
                 try
                 {
-                    if (_ports.TryGetValue(name, out var port))
+                    if (this._ports.TryGetValue(name, out var port))
                     {
                         if (!port.IsOpen)
                         {
@@ -366,7 +366,7 @@ namespace LocalDeviceAdapter.Handlers.Uart
                             if (isTimeoutValid) port.ReadTimeout = timeout;
 
                             port.Write(sendArray, 0, sendArray.Length);
-                            var receivedArray = Receive(port);
+                            var receivedArray = this.Receive(port);
                             return (true, string.Join("", receivedArray.Select(x => x.ToString("X2"))));
                         }
                     }

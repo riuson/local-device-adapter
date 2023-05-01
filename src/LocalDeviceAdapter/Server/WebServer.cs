@@ -31,30 +31,30 @@ namespace LocalDeviceAdapter.Server
             IWebSocketServerFactory webSocketServerFactory,
             IEnumerable<IHandlerInitializer> handlerInitializers)
         {
-            _logger = logger;
-            _webSocketServerFactory = webSocketServerFactory;
-            _handlerInitializers = handlerInitializers
+            this._logger = logger;
+            this._webSocketServerFactory = webSocketServerFactory;
+            this._handlerInitializers = handlerInitializers
                 .ToDictionary(x => x.Path);
         }
 
         public void Dispose()
         {
-            if (!_isDisposed)
+            if (!this._isDisposed)
             {
-                _isDisposed = true;
+                this._isDisposed = true;
 
                 // safely attempt to shut down the listener
                 try
                 {
-                    _listener?.Server?.Close();
-                    _listener?.Stop();
+                    this._listener?.Server?.Close();
+                    this._listener?.Stop();
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex.ToString());
+                    this._logger.LogError(ex.ToString());
                 }
 
-                _logger.LogInformation("Web Server disposed");
+                this._logger.LogInformation("Web Server disposed");
             }
         }
 
@@ -62,13 +62,14 @@ namespace LocalDeviceAdapter.Server
         {
             try
             {
-                _listener = new TcpListener(ipAddress, port);
-                _listener.Start();
-                _logger.LogInformation($"Server started listening on port {port}");
+                this._listener = new TcpListener(ipAddress, port);
+                this._listener.Start();
+                this._logger.LogInformation($"Server started listening on port {port}");
+
                 while (true)
                 {
-                    var tcpClient = await _listener.AcceptTcpClientAsync();
-                    var taskClient = ProcessTcpClientAsync(tcpClient);
+                    var tcpClient = await this._listener.AcceptTcpClientAsync();
+                    var taskClient = this.ProcessTcpClientAsync(tcpClient);
                 }
             }
             catch (SocketException ex)
@@ -87,53 +88,54 @@ namespace LocalDeviceAdapter.Server
 
             try
             {
-                if (_isDisposed) return;
+                if (this._isDisposed) return;
 
                 // this worker thread stays alive until either of the following happens:
                 // Client sends a close conection request OR
                 // An unhandled exception is thrown OR
                 // The server is disposed
-                _logger.LogInformation("Server: Connection opened. Reading Http header from stream");
+                this._logger.LogInformation("Server: Connection opened. Reading Http header from stream");
 
                 // get a secure or insecure stream
                 Stream stream = tcpClient.GetStream();
-                var context = await _webSocketServerFactory.ReadHttpHeaderFromStreamAsync(stream);
+                var context = await this._webSocketServerFactory.ReadHttpHeaderFromStreamAsync(stream);
+
                 if (context.IsWebSocketRequest)
                 {
                     var header = context.HttpHeader;
                     var path = GetPath(header);
                     var origin = GetOrigin(header);
 
-                    if (_handlerInitializers.ContainsKey(path))
+                    if (this._handlerInitializers.ContainsKey(path))
                     {
                         var options = new WebSocketServerOptions
                         {
                             KeepAliveInterval = TimeSpan.FromSeconds(30)
                         };
-                        _logger.LogInformation(
+                        this._logger.LogInformation(
                             "Http header has requested an upgrade to Web Socket protocol. Negotiating Web Socket handshake.");
 
-                        var webSocket = await _webSocketServerFactory.AcceptWebSocketAsync(context, options);
+                        var webSocket = await this._webSocketServerFactory.AcceptWebSocketAsync(context, options);
 
-                        _logger.LogInformation("Web Socket handshake response sent. Stream ready.");
-                        await RespondToWebSocketRequestAsync(
+                        this._logger.LogInformation("Web Socket handshake response sent. Stream ready.");
+                        await this.RespondToWebSocketRequestAsync(
                             webSocket,
                             source.Token,
                             path,
                             origin,
-                            _handlerInitializers[path]);
+                            this._handlerInitializers[path]);
                     }
                     else
                     {
-                        _logger.LogInformation("No handlers are expecting for this path. Ignoring.");
+                        this._logger.LogInformation("No handlers are expecting for this path. Ignoring.");
                     }
                 }
                 else
                 {
-                    _logger.LogInformation("Http header contains no web socket upgrade request. Ignoring.");
+                    this._logger.LogInformation("Http header contains no web socket upgrade request. Ignoring.");
                 }
 
-                _logger.LogInformation("Server: Connection closed.");
+                this._logger.LogInformation("Server: Connection closed.");
             }
             catch (ObjectDisposedException)
             {
@@ -141,7 +143,7 @@ namespace LocalDeviceAdapter.Server
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.ToString());
+                this._logger.LogError(ex.ToString());
             }
             finally
             {
@@ -153,7 +155,7 @@ namespace LocalDeviceAdapter.Server
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"Failed to close TCP connection: {ex}");
+                    this._logger.LogError($"Failed to close TCP connection: {ex}");
                 }
             }
         }
@@ -174,7 +176,7 @@ namespace LocalDeviceAdapter.Server
                     var result = await webSocket.ReceiveAsync(buffer, token);
                     if (result.MessageType == WebSocketMessageType.Close)
                     {
-                        _logger.LogInformation(
+                        this._logger.LogInformation(
                             $"Client initiated close. Status: {result.CloseStatus} Description: {result.CloseStatusDescription}");
                         break;
                     }
