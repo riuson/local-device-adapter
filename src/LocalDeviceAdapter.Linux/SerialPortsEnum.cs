@@ -1,4 +1,7 @@
-﻿namespace LocalDeviceAdapter.PlatformSpecific
+﻿using System.Collections.Generic;
+using LocalDeviceAdapter.Common;
+
+namespace LocalDeviceAdapter.PlatformSpecific
 {
     /// <summary>
     /// Linux-specific code for Serial Ports enumeration.
@@ -8,9 +11,9 @@
         /// <summary>
         /// Gets list of Serial Ports in JSON format.
         /// </summary>
-        public static string GetPortsList()
+        public static IEnumerable<PortInfo> GetPortsList()
         {
-            return string.Empty;
+            return new PortInfo[] { };
         }
     }
 }

@@ -2,6 +2,10 @@
   "editor.formatOnSave": true,
   "files.exclude": {
     "**/bin": true,
-    "**/obj": true
+    "**/obj": true,
+    "**/.vs": true,
+    "**/published": true,
+    "**/*.user": true,
+    "**/*.bak": true
   }
 }
