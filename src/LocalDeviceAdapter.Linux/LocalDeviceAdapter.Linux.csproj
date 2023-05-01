@@ -8,4 +8,10 @@
     <ProjectReference Include="..\LocalDeviceAdapter.Common\LocalDeviceAdapter.Common.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="ttylist.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
