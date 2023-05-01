@@ -1,17 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using LocalDeviceAdapter.PlatformSpecific;
+using Microsoft.Extensions.Logging;
 
 namespace LocalDeviceAdapter.Handlers.Uart
 {
     internal class Handler : IHandler
     {
         protected Dictionary<string, SerialPort> _ports = new Dictionary<string, SerialPort>();
+        private readonly ILogger<Handler> _logger;
+
+        public Handler(
+            ILogger<Handler> logger)
+        {
+            this._logger = logger;
+        }
 
         public void Dispose()
         {
@@ -29,7 +35,7 @@ namespace LocalDeviceAdapter.Handlers.Uart
             {
                 case "list":
                     {
-                        var ports = GetSerialPorts();
+                        var ports = this.GetSerialPorts();
                         return (true, ports);
                     }
                 case "open":
@@ -57,9 +63,11 @@ namespace LocalDeviceAdapter.Handlers.Uart
             }
         }
 
-        private static object GetSerialPorts()
+        private object GetSerialPorts()
         {
-            return SerialPortsEnum.GetPortsList()
+            var ports = SerialPortsEnum.GetPortsList();
+            this._logger.LogInformation("Found {num} ports.", ports.Count());
+            return ports
                 .Select(x => new
                 {
                     name = x.DeviceName,

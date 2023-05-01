@@ -11,6 +11,10 @@ namespace LocalDeviceAdapter.Handlers
             builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
                 .Where(x => x.IsAssignableTo<IHandlerInitializer>() && !x.IsInterface)
                 .AsImplementedInterfaces();
+            builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
+                .Where(x => x.IsAssignableTo<IHandler>() && !x.IsInterface)
+                .AsSelf()
+                .AsImplementedInterfaces();
         }
     }
 }

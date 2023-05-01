@@ -1,21 +1,22 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System;
 
 namespace LocalDeviceAdapter.Handlers.Info
 {
     internal class Initializer : IHandlerInitializer
     {
-        private readonly ILogger<Handler> _logger;
+        private readonly Func<Handler> _createHandler;
 
-        public Initializer(ILogger<Handler> logger)
+        public Initializer(
+            Func<Handler> createHandler)
         {
-            _logger = logger;
+            this._createHandler = createHandler;
         }
 
         public string Path => "/Info";
 
         public IHandler CreateHandler()
         {
-            return new Handler(_logger);
+            return this._createHandler();
         }
     }
 }
