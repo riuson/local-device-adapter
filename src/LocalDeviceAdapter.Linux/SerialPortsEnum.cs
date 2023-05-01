@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -75,7 +75,7 @@ namespace LocalDeviceAdapter.PlatformSpecific
                 var fieldName = pair[0].Trim();
                 var fieldValue = pair[1].Trim();
 
-                switch (fieldName)
+                switch (fieldName.TrimEnd(':'))
                 {
                     case "name":
                         {
@@ -88,12 +88,12 @@ namespace LocalDeviceAdapter.PlatformSpecific
                         }
                     case "description":
                         {
-                            info.Description = fieldValue.Replace("\x20", " ");
+                            info.Description = fieldValue.Replace("\\x20", " ");
                             break;
                         }
                     case "friendlyName":
                         {
-                            info.FriendlyName = fieldValue.Replace("\x20", " ");
+                            info.FriendlyName = fieldValue.Replace("\\x20", " ");
                             break;
                         }
                     case "vendorId":
