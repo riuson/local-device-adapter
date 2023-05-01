@@ -59,7 +59,16 @@ namespace LocalDeviceAdapter.Handlers.Uart
 
         private static object GetSerialPorts()
         {
-            return SerialPortsEnum.GetPortsList();
+            return SerialPortsEnum.GetPortsList()
+                .Select(x => new
+                {
+                    name = x.DeviceName,
+                    description = x.Description,
+                    friendlyName = x.FriendlyName,
+                    vendorId = x.VendorId,
+                    productId = x.ProductId,
+                })
+                .ToArray();
         }
 
         private (bool success, string message) HandlePortOpen(Dictionary<string, string> arguments)
