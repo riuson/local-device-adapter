@@ -59,34 +59,7 @@ namespace LocalDeviceAdapter.Handlers.Uart
 
         private static object GetSerialPorts()
         {
-            var str = SerialPortsEnum.GetPortsList();
-            // SDRP_HARDWAREID: USB\VID_10C4&PID_EA60&REV_0100USB\VID_10C4&PID_EA60
-            var regexVid = new Regex(@"(?<=VID_)[0-9a-fA-F]{4}");
-            var regexPid = new Regex(@"(?<=PID_)[0-9a-fA-F]{4}");
-
-            int getId(Regex regex, string value)
-            {
-                var match = regex.Match(value);
-
-                if (!match.Success) return -1;
-
-                if (int.TryParse(match.Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var result))
-                    return result;
-
-                return -1;
-            }
-
-            var ports = Win32SerialPortEnum.GetAllCOMPorts()
-                .Select(x => new
-                {
-                    name = x.Name,
-                    description = x.Description,
-                    friendlyName = x.FriendlyName,
-                    vendorId = getId(regexVid, x.HardwareId),
-                    productId = getId(regexPid, x.HardwareId)
-                })
-                .ToArray();
-            return ports;
+            return SerialPortsEnum.GetPortsList();
         }
 
         private (bool success, string message) HandlePortOpen(Dictionary<string, string> arguments)
@@ -99,8 +72,8 @@ namespace LocalDeviceAdapter.Handlers.Uart
 
             if (arguments.TryGetValue("name", out strValue))
             {
-                var ports = Win32SerialPortEnum.GetAllCOMPorts()
-                    .Select(x => x.Name)
+                var ports = SerialPortsEnum.GetPortsList()
+                    .Select(x => x.DeviceName)
                     .ToArray();
 
                 if (ports.Contains(strValue))
@@ -290,8 +263,8 @@ namespace LocalDeviceAdapter.Handlers.Uart
 
             if (arguments.TryGetValue("name", out strValue))
             {
-                var ports = Win32SerialPortEnum.GetAllCOMPorts()
-                    .Select(x => x.Name)
+                var ports = SerialPortsEnum.GetPortsList()
+                    .Select(x => x.DeviceName)
                     .ToArray();
 
                 if (ports.Contains(strValue) && _ports.ContainsKey(strValue))
@@ -399,8 +372,8 @@ namespace LocalDeviceAdapter.Handlers.Uart
 
             if (arguments.TryGetValue("name", out strValue))
             {
-                var ports = Win32SerialPortEnum.GetAllCOMPorts()
-                    .Select(x => x.Name)
+                var ports = SerialPortsEnum.GetPortsList()
+                    .Select(x => x.DeviceName)
                     .ToArray();
 
                 if (ports.Contains(strValue))
@@ -468,7 +441,7 @@ namespace LocalDeviceAdapter.Handlers.Uart
                 {
                     readed = port.Read(buffer, 0, 100);
                 }
-                catch (TimeoutException exc)
+                catch
                 {
                     readed = 0;
                 }

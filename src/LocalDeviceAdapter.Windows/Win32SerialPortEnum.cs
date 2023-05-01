@@ -5,7 +5,7 @@ using System.Text;
 using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
 
-namespace LocalDeviceAdapter.Handlers.Uart
+namespace LocalDeviceAdapter.PlatformSpecific
 {
     internal class Win32SerialPortEnum
     {
