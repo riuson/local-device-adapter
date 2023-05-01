@@ -2,11 +2,11 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>net472;net5.0-windows;net6.0-windows;net7.0-windows</TargetFrameworks>
-		<RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
-		<Nullable>disable</Nullable>
+		<TargetFrameworks>net472;net6.0</TargetFrameworks>
+		<RuntimeIdentifiers>win10-x64;linux-x64</RuntimeIdentifiers>
 		<DisableWinExeOutputInference>true</DisableWinExeOutputInference>
-		<ImplicitUsings>disable</ImplicitUsings>
+		<IsBuildOnWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsBuildOnWindows>
+		<IsBuildOnLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsBuildOnLinux>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -23,6 +23,26 @@
 		<PackageReference Include="Ninja.WebSockets" Version="1.1.8" />
 		<PackageReference Include="System.IO.Ports" Version="7.0.0" />
 		<PackageReference Include="System.Text.Json" Version="8.0.0-preview.1.23110.8" />
+	</ItemGroup>
+
+	<!--// Publish for Linux //-->
+	<ItemGroup Condition="'$(RuntimeIdentifier)'=='linux-x64'">
+		<ProjectReference Include="..\LocalDeviceAdapter.Linux\LocalDeviceAdapter.Linux.csproj" />
+	</ItemGroup>
+
+	<!--// Build for debug on Linux //-->
+	<ItemGroup Condition=" ('$(Configuration)' == 'Debug') And ('$(IsBuildOnLinux)'=='true') ">
+		<ProjectReference Include="..\LocalDeviceAdapter.Linux\LocalDeviceAdapter.Linux.csproj" />
+	</ItemGroup>
+
+	<!--// Publish for Windows //-->
+	<ItemGroup Condition="'$(RuntimeIdentifier)'=='win10-x64'">
+		<ProjectReference Include="..\LocalDeviceAdapter.Windows\LocalDeviceAdapter.Windows.csproj" />
+	</ItemGroup>
+
+	<!--// Build for debug on Windows //-->
+	<ItemGroup Condition=" ('$(Configuration)' == 'Debug') And ('$(IsBuildOnWindows)'=='true') ">
+		<ProjectReference Include="..\LocalDeviceAdapter.Windows\LocalDeviceAdapter.Windows.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -14,18 +14,6 @@
       "problemMatcher": "$msCompile"
     },
     {
-      "label": "publish",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "publish",
-        "${workspaceFolder}/src/LocalDeviceAdapter/LocalDeviceAdapter.csproj",
-        "/property:GenerateFullPaths=true",
-        "/consoleloggerparameters:NoSummary"
-      ],
-      "problemMatcher": "$msCompile"
-    },
-    {
       "label": "watch",
       "command": "dotnet",
       "type": "process",
@@ -46,6 +34,40 @@
         "${workspaceFolder}/src/LocalDeviceAdapter/LocalDeviceAdapter.csproj",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "publish win10x64 sc",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "publish",
+        "${workspaceFolder}/src/LocalDeviceAdapter/LocalDeviceAdapter.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary",
+        "-f",
+        "net6.0",
+        "-r",
+        "win10-x64",
+        "--self-contained"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "publish linx64 sc",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "publish",
+        "${workspaceFolder}/src/LocalDeviceAdapter/LocalDeviceAdapter.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary",
+        "-f",
+        "net6.0",
+        "-r",
+        "linux-x64",
+        "--self-contained"
       ],
       "problemMatcher": "$msCompile"
     }

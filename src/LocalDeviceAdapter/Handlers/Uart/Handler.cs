@@ -5,6 +5,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using LocalDeviceAdapter.PlatformSpecific;
 
 namespace LocalDeviceAdapter.Handlers.Uart
 {
@@ -27,30 +28,30 @@ namespace LocalDeviceAdapter.Handlers.Uart
             switch (command.Cmd)
             {
                 case "list":
-                {
-                    var ports = GetSerialPorts();
-                    return (true, ports);
-                }
+                    {
+                        var ports = GetSerialPorts();
+                        return (true, ports);
+                    }
                 case "open":
-                {
-                    var (isOpened, message) = HandlePortOpen(command.Args);
-                    return (isOpened, message);
-                }
+                    {
+                        var (isOpened, message) = HandlePortOpen(command.Args);
+                        return (isOpened, message);
+                    }
                 case "close":
-                {
-                    var (isClosed, message) = HandlePortClose(command.Args);
-                    return (isClosed, message);
-                }
+                    {
+                        var (isClosed, message) = HandlePortClose(command.Args);
+                        return (isClosed, message);
+                    }
                 case "exchange":
-                {
-                    var (isSuccess, message) = HandlePortExchange(command.Args);
-                    return (isSuccess, message);
-                }
+                    {
+                        var (isSuccess, message) = HandlePortExchange(command.Args);
+                        return (isSuccess, message);
+                    }
                 case "testExchange":
-                {
-                    var (isSuccess, message) = HandlePortTestExchange(command.Args);
-                    return (isSuccess, message);
-                }
+                    {
+                        var (isSuccess, message) = HandlePortTestExchange(command.Args);
+                        return (isSuccess, message);
+                    }
                 default:
                     return (false, new object());
             }
@@ -58,6 +59,7 @@ namespace LocalDeviceAdapter.Handlers.Uart
 
         private static object GetSerialPorts()
         {
+            var str = SerialPortsEnum.GetPortsList();
             // SDRP_HARDWAREID: USB\VID_10C4&PID_EA60&REV_0100USB\VID_10C4&PID_EA60
             var regexVid = new Regex(@"(?<=VID_)[0-9a-fA-F]{4}");
             var regexPid = new Regex(@"(?<=PID_)[0-9a-fA-F]{4}");
@@ -151,27 +153,27 @@ namespace LocalDeviceAdapter.Handlers.Uart
                 switch (strValue)
                 {
                     case "none":
-                    {
-                        isParityValid = true;
-                        break;
-                    }
+                        {
+                            isParityValid = true;
+                            break;
+                        }
                     case "even":
-                    {
-                        parity = Parity.Even;
-                        isParityValid = true;
-                        break;
-                    }
+                        {
+                            parity = Parity.Even;
+                            isParityValid = true;
+                            break;
+                        }
                     case "odd":
-                    {
-                        parity = Parity.Odd;
-                        isParityValid = true;
-                        break;
-                    }
+                        {
+                            parity = Parity.Odd;
+                            isParityValid = true;
+                            break;
+                        }
                     default:
-                    {
-                        message.AppendLine($"Unexpected parity value '{strValue}'.");
-                        break;
-                    }
+                        {
+                            message.AppendLine($"Unexpected parity value '{strValue}'.");
+                            break;
+                        }
                 }
             else
                 message.AppendLine("Parity name is not specified.");
@@ -184,35 +186,35 @@ namespace LocalDeviceAdapter.Handlers.Uart
                 {
                     case "none":
                     case "0":
-                    {
-                        isStopBitsValid = true;
-                        break;
-                    }
+                        {
+                            isStopBitsValid = true;
+                            break;
+                        }
                     case "1":
                     case "one":
-                    {
-                        stopBits = StopBits.One;
-                        isStopBitsValid = true;
-                        break;
-                    }
+                        {
+                            stopBits = StopBits.One;
+                            isStopBitsValid = true;
+                            break;
+                        }
                     case "1.5":
-                    {
-                        stopBits = StopBits.OnePointFive;
-                        isStopBitsValid = true;
-                        break;
-                    }
+                        {
+                            stopBits = StopBits.OnePointFive;
+                            isStopBitsValid = true;
+                            break;
+                        }
                     case "2":
                     case "two":
-                    {
-                        stopBits = StopBits.Two;
-                        isStopBitsValid = true;
-                        break;
-                    }
+                        {
+                            stopBits = StopBits.Two;
+                            isStopBitsValid = true;
+                            break;
+                        }
                     default:
-                    {
-                        message.AppendLine($"Unexpected stopbits value '{strValue}'.");
-                        break;
-                    }
+                        {
+                            message.AppendLine($"Unexpected stopbits value '{strValue}'.");
+                            break;
+                        }
                 }
             else
                 message.AppendLine("Stopbits name is not specified.");
