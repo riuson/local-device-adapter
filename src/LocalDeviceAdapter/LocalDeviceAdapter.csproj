@@ -25,6 +25,11 @@
 		<PackageReference Include="System.Text.Json" Version="8.0.0-preview.1.23110.8" />
 	</ItemGroup>
 
+	<!--// Common definitions //-->
+	<ItemGroup>
+		<ProjectReference Include="..\LocalDeviceAdapter.Common\LocalDeviceAdapter.Common.csproj" />
+	</ItemGroup>
+
 	<!--// Publish for Linux //-->
 	<ItemGroup Condition="'$(RuntimeIdentifier)'=='linux-x64'">
 		<ProjectReference Include="..\LocalDeviceAdapter.Linux\LocalDeviceAdapter.Linux.csproj" />
