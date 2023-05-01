@@ -9,9 +9,6 @@
 # List of ttyusb's dev files one per line.
 devs=$(ls -a1 /sys/class/tty/ttyUSB*/dev)
 
-echo "["
-any=false
-
 # Iterate Major/Minor nodes.
 for dev in $devs
 do
@@ -27,28 +24,19 @@ do
     info=$(udevadm info --query=property --name=$path -x -P SP_ )
     vid=$(echo "$info" | grep -oP "(?<=SP_ID_VENDOR_ID=')[0-9a-fA-F]+(?=')")
     pid=$(echo "$info" | grep -oP "(?<=SP_ID_MODEL_ID=')[0-9a-fA-F]+(?=')")
-    model=$(echo "$info" | grep -oP "(?<=^SP_ID_MODEL=').+(?='$)")
+    model=$(echo "$info" | grep -oP "(?<=^SP_ID_MODEL_ENC=').+(?='$)")
 
     # Write out info.
-
-    #[ ! -z "$infoString" ] && echo ","
-    #infoString="  {\"name\":\"$path\",\"description\":\"$model\",\"friendlyName\":\"$model ($path)\",\"vendorId\":\"$vid\",\"productId\":\"$pid\"}"
-    #echo -n $infoString
-
-    if $any ; then
-        echo ","
-    fi
-    echo "  {"
-    echo "    \"name\": \"$path\","
-    echo "    \"description\": \"$model\","
-    echo "    \"friendlyName\": \"$model ($path)\","
-    #echo "    \"vendorId\": \"0x$vid\","
-    printf "    \"vendorId\": \"%d\",\n" 0x$vid
-    #echo "    \"productId\": \"0x$pid\""
-    printf "    \"productId\": \"%d\"\n" 0x$pid
-    echo -n "  }"
-    any=true
+    echo "name:\t$path"
+    echo "description:\t$model"
+    echo "friendlyName:\t$model ($path)"
+    printf "vendorId:\t%d\n" 0x$vid
+    printf "productId:\t%d\n" 0x$pid
 done
 
-echo "\n]"
-
+# name:   /dev/ttyUSB0
+# description:    CP2102\x20USB\x20to\x20UART\x20Bridge\x20Controller
+# friendlyName:   CP2102\x20USB\x20to\x20UART\x20Bridge\x20Controller (/dev/ttyUSB0)
+# vendorId:       4292
+# productId:      60000
+# ............
